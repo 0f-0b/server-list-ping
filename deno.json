@@ -4,7 +4,7 @@
     "useUnknownInCatchVariables": true
   },
   "tasks": {
-    "lint": "deno fmt --check && deno lint && deno check --remote --lock=lock.json --lock-write main.ts",
-    "test": "deno test --check=all"
+    "lint": "deno fmt --check && deno lint && deno check --lock --remote main.ts",
+    "test": "deno test --lock --check=all"
   }
 }
