@@ -5,15 +5,15 @@ import {
   BufWriter,
   readBuffer,
   readBufferSync,
-  readVarInt,
-  readVarIntSync,
+  readVarint32,
+  readVarint32Sync,
   unexpectedEof,
+  writeBigInt64BESync,
   writeBufferSync,
-  writeLongBESync,
+  writeInt16BESync,
   writePacket,
-  writeShortBESync,
-  writeVarInt,
-  writeVarIntSync,
+  writeVarint32,
+  writeVarint32Sync,
 } from "./bufio.ts";
 
 const encoder = new TextEncoder();
@@ -51,27 +51,27 @@ export async function serverListPing(
   return await abortable(signal, () => conn.close(), async () => {
     const r = new BufReader(conn);
     const w = new BufWriter(conn);
-    await writePacket(w, writeVarInt, (p) => {
-      writeVarIntSync(p, 0);
-      writeVarIntSync(p, -1);
-      writeBufferSync(p, writeVarIntSync, encoder.encode(hostname));
-      writeShortBESync(p, port);
-      writeVarIntSync(p, 1);
+    await writePacket(w, writeVarint32, (p) => {
+      writeVarint32Sync(p, 0);
+      writeVarint32Sync(p, -1);
+      writeBufferSync(p, writeVarint32Sync, encoder.encode(hostname));
+      writeInt16BESync(p, port);
+      writeVarint32Sync(p, 1);
     });
-    await writePacket(w, writeVarInt, (p) => {
-      writeVarIntSync(p, 0);
+    await writePacket(w, writeVarint32, (p) => {
+      writeVarint32Sync(p, 0);
     });
-    await writePacket(w, writeVarInt, (p) => {
-      writeVarIntSync(p, 1);
-      writeLongBESync(p, 0n);
+    await writePacket(w, writeVarint32, (p) => {
+      writeVarint32Sync(p, 1);
+      writeBigInt64BESync(p, 0n);
     });
     await w.flush();
-    const rp = new Buffer(await readBuffer(r, readVarInt) ?? unexpectedEof());
-    if (readVarIntSync(rp) !== 0) {
+    const rp = new Buffer(await readBuffer(r, readVarint32) ?? unexpectedEof());
+    if (readVarint32Sync(rp) !== 0) {
       throw new TypeError("Expected Response packet");
     }
     return JSON.parse(
-      decoder.decode(readBufferSync(rp, readVarIntSync) ?? unexpectedEof()),
+      decoder.decode(readBufferSync(rp, readVarint32Sync) ?? unexpectedEof()),
     );
   });
 }

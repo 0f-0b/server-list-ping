@@ -1,5 +1,10 @@
 import { encodeU32, encodeU64 } from "./deps/std/encoding/varint.ts";
-import { Buffer, BufReader, BufWriter } from "./deps/std/io/buffer.ts";
+import {
+  Buffer,
+  BufReader,
+  BufWriter,
+  PartialReadError,
+} from "./deps/std/io/buffer.ts";
 
 export { Buffer, BufReader, BufWriter };
 
@@ -7,47 +12,53 @@ export function unexpectedEof(): never {
   throw new Deno.errors.UnexpectedEof();
 }
 
-export function encodeShortLE(value: number): Uint8Array {
+function encodeInt8(value: number): Uint8Array {
+  const buf = new ArrayBuffer(1);
+  new DataView(buf).setInt8(0, value);
+  return new Uint8Array(buf);
+}
+
+function encodeInt16LE(value: number): Uint8Array {
   const buf = new ArrayBuffer(2);
   new DataView(buf).setInt16(0, value, true);
   return new Uint8Array(buf);
 }
 
-export function encodeShortBE(value: number): Uint8Array {
+function encodeInt16BE(value: number): Uint8Array {
   const buf = new ArrayBuffer(2);
   new DataView(buf).setInt16(0, value);
   return new Uint8Array(buf);
 }
 
-export function encodeIntLE(value: number): Uint8Array {
+function encodeInt32LE(value: number): Uint8Array {
   const buf = new ArrayBuffer(4);
   new DataView(buf).setInt32(0, value, true);
   return new Uint8Array(buf);
 }
 
-export function encodeIntBE(value: number): Uint8Array {
+function encodeInt32BE(value: number): Uint8Array {
   const buf = new ArrayBuffer(4);
   new DataView(buf).setInt32(0, value);
   return new Uint8Array(buf);
 }
 
-export function encodeLongLE(value: bigint): Uint8Array {
+function encodeBigInt64LE(value: bigint): Uint8Array {
   const buf = new ArrayBuffer(8);
   new DataView(buf).setBigInt64(0, value, true);
   return new Uint8Array(buf);
 }
 
-export function encodeLongBE(value: bigint): Uint8Array {
+function encodeBigInt64BE(value: bigint): Uint8Array {
   const buf = new ArrayBuffer(8);
   new DataView(buf).setBigInt64(0, value);
   return new Uint8Array(buf);
 }
 
-export function encodeVarInt(value: number): Uint8Array {
+function encodeVarint32(value: number): Uint8Array {
   return encodeU32(value >>> 0);
 }
 
-export function encodeVarLong(value: bigint): Uint8Array {
+function encodeBigVarint64(value: bigint): Uint8Array {
   return encodeU64(BigInt.asUintN(64, value));
 }
 
@@ -55,7 +66,14 @@ export async function readFull(
   r: BufReader,
   buf: Uint8Array,
 ): Promise<Uint8Array | null> {
-  return await r.readFull(buf);
+  try {
+    return await r.readFull(buf);
+  } catch (e) {
+    if (!(e instanceof PartialReadError)) {
+      throw e;
+    }
+    unexpectedEof();
+  }
 }
 
 export function readFullSync(r: Buffer, buf: Uint8Array): Uint8Array | null {
@@ -69,11 +87,11 @@ export function readFullSync(r: Buffer, buf: Uint8Array): Uint8Array | null {
   return buf;
 }
 
-export async function readByte(r: BufReader): Promise<number | null> {
+export async function readUint8(r: BufReader): Promise<number | null> {
   return await r.readByte();
 }
 
-export function readByteSync(r: Buffer): number | null {
+export function readUint8Sync(r: Buffer): number | null {
   const buf = readFullSync(r, new Uint8Array(1));
   if (buf === null) {
     return null;
@@ -81,79 +99,113 @@ export function readByteSync(r: Buffer): number | null {
   return buf[0];
 }
 
-export async function readShortLE(r: BufReader): Promise<number | null> {
-  const low = await readByte(r);
+export async function readUint16LE(r: BufReader): Promise<number | null> {
+  const low = await readUint8(r);
   if (low === null) {
     return null;
   }
-  const high = await readByte(r) ?? unexpectedEof();
+  const high = await readUint8(r) ?? unexpectedEof();
   return low | (high << 8);
 }
 
-export function readShortLESync(r: Buffer): number | null {
+export function readUint16LESync(r: Buffer): number | null {
   const buf = readFullSync(r, new Uint8Array(2));
   if (buf === null) {
     return null;
   }
-  return new DataView(buf.buffer).getInt16(0, true);
+  return new DataView(buf.buffer).getUint16(0, true);
 }
 
-export async function readShortBE(r: BufReader): Promise<number | null> {
-  const high = await readByte(r);
+export async function readUint16BE(r: BufReader): Promise<number | null> {
+  const high = await readUint8(r);
   if (high === null) {
     return null;
   }
-  const low = await readByte(r) ?? unexpectedEof();
+  const low = await readUint8(r) ?? unexpectedEof();
   return low | (high << 8);
 }
 
-export function readShortBESync(r: Buffer): number | null {
+export function readUint16BESync(r: Buffer): number | null {
   const buf = readFullSync(r, new Uint8Array(2));
   if (buf === null) {
     return null;
   }
-  return new DataView(buf.buffer).getInt16(0);
+  return new DataView(buf.buffer).getUint16(0);
 }
 
-export async function readIntLE(r: BufReader): Promise<number | null> {
-  const low = await readShortLE(r);
+export async function readUint32LE(r: BufReader): Promise<number | null> {
+  const low = await readUint16LE(r);
   if (low === null) {
     return null;
   }
-  const high = await readShortLE(r) ?? unexpectedEof();
-  return low | (high << 16);
+  const high = await readUint16LE(r) ?? unexpectedEof();
+  return (low | (high << 16)) >>> 0;
 }
 
-export function readIntLESync(r: Buffer): number | null {
+export function readUint32LESync(r: Buffer): number | null {
   const buf = readFullSync(r, new Uint8Array(4));
   if (buf === null) {
     return null;
   }
-  return new DataView(buf.buffer).getInt32(0, true);
+  return new DataView(buf.buffer).getUint32(0, true);
 }
 
-export async function readIntBE(r: BufReader): Promise<number | null> {
-  const high = await readShortBE(r);
+export async function readUint32BE(r: BufReader): Promise<number | null> {
+  const high = await readUint16BE(r);
   if (high === null) {
     return null;
   }
-  const low = await readShortBE(r) ?? unexpectedEof();
-  return low | (high << 16);
+  const low = await readUint16BE(r) ?? unexpectedEof();
+  return (low | (high << 16)) >>> 0;
 }
 
-export function readIntBESync(r: Buffer): number | null {
+export function readUint32BESync(r: Buffer): number | null {
   const buf = readFullSync(r, new Uint8Array(4));
   if (buf === null) {
     return null;
   }
-  return new DataView(buf.buffer).getInt32(0);
+  return new DataView(buf.buffer).getUint32(0);
 }
 
-export async function readVarInt(r: BufReader): Promise<number | null> {
+export async function readBigUint64LE(r: BufReader): Promise<bigint | null> {
+  const low = await readUint32LE(r);
+  if (low === null) {
+    return null;
+  }
+  const high = await readUint32LE(r) ?? unexpectedEof();
+  return BigInt(low) | (BigInt(high) << 32n);
+}
+
+export function readBigUint64LESync(r: Buffer): bigint | null {
+  const buf = readFullSync(r, new Uint8Array(8));
+  if (buf === null) {
+    return null;
+  }
+  return new DataView(buf.buffer).getBigUint64(0, true);
+}
+
+export async function readBigUint64BE(r: BufReader): Promise<bigint | null> {
+  const high = await readUint32BE(r);
+  if (high === null) {
+    return null;
+  }
+  const low = await readUint32BE(r) ?? unexpectedEof();
+  return BigInt(low) | (BigInt(high) << 32n);
+}
+
+export function readBigUint64BESync(r: Buffer): bigint | null {
+  const buf = readFullSync(r, new Uint8Array(8));
+  if (buf === null) {
+    return null;
+  }
+  return new DataView(buf.buffer).getBigUint64(0);
+}
+
+export async function readVarint32(r: BufReader): Promise<number | null> {
   let result = 0;
   let len = 0;
   for (;;) {
-    const b = await readByte(r);
+    const b = await readUint8(r);
     if (b === null) {
       if (len > 0) {
         unexpectedEof();
@@ -165,13 +217,13 @@ export async function readVarInt(r: BufReader): Promise<number | null> {
       break;
     }
     if (++len === 5) {
-      throw new TypeError("VarInt is too long");
+      throw new TypeError("varint is too long");
     }
   }
-  return result;
+  return result >>> 0;
 }
 
-export function readVarIntSync(r: Buffer): number | null {
+export function readVarint32Sync(r: Buffer): number | null {
   const buf = new Uint8Array(1);
   let result = 0;
   let len = 0;
@@ -188,17 +240,17 @@ export function readVarIntSync(r: Buffer): number | null {
       break;
     }
     if (++len === 5) {
-      throw new TypeError("VarInt is too long");
+      throw new TypeError("varint is too long");
     }
   }
-  return result;
+  return result >>> 0;
 }
 
-export async function readVarLong(r: BufReader): Promise<bigint | null> {
+export async function readBigVarint64(r: BufReader): Promise<bigint | null> {
   let result = 0n;
   let len = 0;
   for (;;) {
-    const b = await readByte(r);
+    const b = await readUint8(r);
     if (b === null) {
       if (len > 0) {
         unexpectedEof();
@@ -210,13 +262,13 @@ export async function readVarLong(r: BufReader): Promise<bigint | null> {
       break;
     }
     if (++len === 10) {
-      throw new TypeError("VarLong is too long");
+      throw new TypeError("varint is too long");
     }
   }
-  return result;
+  return BigInt.asUintN(64, result);
 }
 
-export function readVarLongSync(r: Buffer): bigint | null {
+export function readBigVarint64Sync(r: Buffer): bigint | null {
   const buf = new Uint8Array(1);
   let result = 0n;
   let len = 0;
@@ -233,10 +285,10 @@ export function readVarLongSync(r: Buffer): bigint | null {
       break;
     }
     if (++len === 10) {
-      throw new TypeError("VarLong is too long");
+      throw new TypeError("varint is too long");
     }
   }
-  return result;
+  return BigInt.asUintN(64, result);
 }
 
 export async function readBuffer(
@@ -269,120 +321,155 @@ export function readBufferSync(
   return buf;
 }
 
-export async function writeByte(
+export async function writeInt8(
   w: BufWriter,
   value: number,
 ): Promise<undefined> {
-  await w.write(new Uint8Array([value]));
+  if (w.err !== null) {
+    throw w.err;
+  }
+  if (w.size() === 0) {
+    await w.write(encodeInt8(value));
+    return;
+  }
+  if (w.available() === 0) {
+    await w.flush();
+  }
+  w.buf[w.usedBufferBytes++] = value;
+}
+
+export function writeInt8Sync(w: Buffer, value: number): undefined {
+  w.writeSync(encodeInt8(value));
   return;
 }
 
-export function writeByteSync(w: Buffer, value: number): undefined {
-  w.writeSync(new Uint8Array([value]));
-  return;
-}
-
-export async function writeShortLE(
+export async function writeInt16LE(
   w: BufWriter,
   value: number,
 ): Promise<undefined> {
-  await w.write(encodeShortLE(value));
+  await writeInt8(w, value >> 0);
+  await writeInt8(w, value >> 8);
   return;
 }
 
-export function writeShortLESync(w: Buffer, value: number): undefined {
-  w.writeSync(encodeShortLE(value));
+export function writeInt16LESync(w: Buffer, value: number): undefined {
+  w.writeSync(encodeInt16LE(value));
   return;
 }
 
-export async function writeShortBE(
+export async function writeInt16BE(
   w: BufWriter,
   value: number,
 ): Promise<undefined> {
-  await w.write(encodeShortBE(value));
+  await writeInt8(w, value >> 8);
+  await writeInt8(w, value >> 0);
   return;
 }
 
-export function writeShortBESync(w: Buffer, value: number): undefined {
-  w.writeSync(encodeShortBE(value));
+export function writeInt16BESync(w: Buffer, value: number): undefined {
+  w.writeSync(encodeInt16BE(value));
   return;
 }
 
-export async function writeIntLE(
+export async function writeInt32LE(
   w: BufWriter,
   value: number,
 ): Promise<undefined> {
-  await w.write(encodeIntLE(value));
+  await writeInt16LE(w, value >> 0);
+  await writeInt16LE(w, value >> 16);
   return;
 }
 
-export function writeIntLESync(w: Buffer, value: number): undefined {
-  w.writeSync(encodeIntLE(value));
+export function writeInt32LESync(w: Buffer, value: number): undefined {
+  w.writeSync(encodeInt32LE(value));
   return;
 }
 
-export async function writeIntBE(
+export async function writeInt32BE(
   w: BufWriter,
   value: number,
 ): Promise<undefined> {
-  await w.write(encodeIntBE(value));
+  await writeInt16BE(w, value >> 16);
+  await writeInt16BE(w, value >> 0);
   return;
 }
 
-export function writeIntBESync(w: Buffer, value: number): undefined {
-  w.writeSync(encodeIntBE(value));
+export function writeInt32BESync(w: Buffer, value: number): undefined {
+  w.writeSync(encodeInt32BE(value));
   return;
 }
 
-export async function writeLongLE(
+export async function writeBigInt64LE(
   w: BufWriter,
   value: bigint,
 ): Promise<undefined> {
-  await w.write(encodeLongLE(value));
+  value = BigInt.asIntN(64, value);
+  await writeInt32LE(w, Number(BigInt.asIntN(32, value >> 0n)));
+  await writeInt32LE(w, Number(BigInt.asIntN(32, value >> 32n)));
   return;
 }
 
-export function writeLongLESync(w: Buffer, value: bigint): undefined {
-  w.writeSync(encodeLongLE(value));
+export function writeBigInt64LESync(w: Buffer, value: bigint): undefined {
+  w.writeSync(encodeBigInt64LE(value));
   return;
 }
 
-export async function writeLongBE(
+export async function writeBigInt64BE(
   w: BufWriter,
   value: bigint,
 ): Promise<undefined> {
-  await w.write(encodeLongBE(value));
+  value = BigInt.asIntN(64, value);
+  await writeInt32BE(w, Number(BigInt.asIntN(32, value >> 32n)));
+  await writeInt32BE(w, Number(BigInt.asIntN(32, value >> 0n)));
   return;
 }
 
-export function writeLongBESync(w: Buffer, value: bigint): undefined {
-  w.writeSync(encodeLongBE(value));
+export function writeBigInt64BESync(w: Buffer, value: bigint): undefined {
+  w.writeSync(encodeBigInt64BE(value));
   return;
 }
 
-export async function writeVarInt(
+export async function writeVarint32(
   w: BufWriter,
   value: number,
 ): Promise<undefined> {
-  await w.write(encodeVarInt(value));
+  value >>>= 0;
+  for (;;) {
+    const b = value & 0x7f;
+    value >>>= 7;
+    if (!value) {
+      await writeInt8(w, b);
+      break;
+    }
+    await writeInt8(w, b | 0x80);
+  }
   return;
 }
 
-export function writeVarIntSync(w: Buffer, value: number): undefined {
-  w.writeSync(encodeVarInt(value));
+export function writeVarint32Sync(w: Buffer, value: number): undefined {
+  w.writeSync(encodeVarint32(value));
   return;
 }
 
-export async function writeVarLong(
+export async function writeBigVarint64(
   w: BufWriter,
   value: bigint,
 ): Promise<undefined> {
-  await w.write(encodeVarLong(value));
+  value = BigInt.asUintN(64, value);
+  for (;;) {
+    const b = Number(value & 0x7fn);
+    value >>= 7n;
+    if (!value) {
+      await writeInt8(w, b);
+      break;
+    }
+    await writeInt8(w, b | 0x80);
+  }
   return;
 }
 
-export function writeVarLongSync(w: Buffer, value: bigint): undefined {
-  w.writeSync(encodeVarLong(value));
+export function writeBigVarint64Sync(w: Buffer, value: bigint): undefined {
+  w.writeSync(encodeBigVarint64(value));
   return;
 }
 
