@@ -70,7 +70,7 @@ Deno.test("readFull", { permissions: "none" }, async () => {
     const r = new BufReader(new Buffer([0x12, 0x34, 0x56, 0x78]));
     const buf = new Uint8Array(3);
     assertStrictEquals(await readFull(r, buf), buf);
-    assertEquals(buf, new Uint8Array([0x12, 0x34, 0x56]));
+    assertEquals(buf, Uint8Array.of(0x12, 0x34, 0x56));
   }
   {
     const r = new BufReader(new Buffer([0x12, 0x34, 0x56, 0x78]));
@@ -89,7 +89,7 @@ Deno.test("readFullSync", { permissions: "none" }, () => {
     const p = new Buffer([0x12, 0x34, 0x56, 0x78]);
     const buf = new Uint8Array(3);
     assertStrictEquals(readFullSync(p, buf), buf);
-    assertEquals(buf, new Uint8Array([0x12, 0x34, 0x56]));
+    assertEquals(buf, Uint8Array.of(0x12, 0x34, 0x56));
   }
   {
     const p = new Buffer([0x12, 0x34, 0x56, 0x78]);
@@ -348,7 +348,7 @@ Deno.test("readBuffer", { permissions: "none" }, async () => {
         assertStrictEquals(r_, r);
         return Promise.resolve(3);
       }),
-      new Uint8Array([0x12, 0x34, 0x56]),
+      Uint8Array.of(0x12, 0x34, 0x56),
     );
   }
   {
@@ -382,7 +382,7 @@ Deno.test("readBufferSync", { permissions: "none" }, () => {
         assertStrictEquals(p_, p);
         return 3;
       }),
-      new Uint8Array([0x12, 0x34, 0x56]),
+      Uint8Array.of(0x12, 0x34, 0x56),
     );
   }
   {
@@ -403,13 +403,13 @@ Deno.test("writeInt8", { permissions: "none" }, async () => {
   const w = new BufWriter(p);
   await writeInt8(w, 0x87);
   await w.flush();
-  assertEquals(p.bytes(), new Uint8Array([0x87]));
+  assertEquals(p.bytes(), Uint8Array.of(0x87));
 });
 
 Deno.test("writeInt8Sync", { permissions: "none" }, () => {
   const p = new Buffer();
   writeInt8Sync(p, 0x87);
-  assertEquals(p.bytes(), new Uint8Array([0x87]));
+  assertEquals(p.bytes(), Uint8Array.of(0x87));
 });
 
 Deno.test("writeInt16LE", { permissions: "none" }, async () => {
@@ -417,13 +417,13 @@ Deno.test("writeInt16LE", { permissions: "none" }, async () => {
   const w = new BufWriter(p);
   await writeInt16LE(w, 0x8765);
   await w.flush();
-  assertEquals(p.bytes(), new Uint8Array([0x65, 0x87]));
+  assertEquals(p.bytes(), Uint8Array.of(0x65, 0x87));
 });
 
 Deno.test("writeInt16LESync", { permissions: "none" }, () => {
   const p = new Buffer();
   writeInt16LESync(p, 0x8765);
-  assertEquals(p.bytes(), new Uint8Array([0x65, 0x87]));
+  assertEquals(p.bytes(), Uint8Array.of(0x65, 0x87));
 });
 
 Deno.test("writeInt16BE", { permissions: "none" }, async () => {
@@ -431,13 +431,13 @@ Deno.test("writeInt16BE", { permissions: "none" }, async () => {
   const w = new BufWriter(p);
   await writeInt16BE(w, 0x8765);
   await w.flush();
-  assertEquals(p.bytes(), new Uint8Array([0x87, 0x65]));
+  assertEquals(p.bytes(), Uint8Array.of(0x87, 0x65));
 });
 
 Deno.test("writeInt16BESync", { permissions: "none" }, () => {
   const p = new Buffer();
   writeInt16BESync(p, 0x8765);
-  assertEquals(p.bytes(), new Uint8Array([0x87, 0x65]));
+  assertEquals(p.bytes(), Uint8Array.of(0x87, 0x65));
 });
 
 Deno.test("writeInt32LE", { permissions: "none" }, async () => {
@@ -445,13 +445,13 @@ Deno.test("writeInt32LE", { permissions: "none" }, async () => {
   const w = new BufWriter(p);
   await writeInt32LE(w, 0x87654321);
   await w.flush();
-  assertEquals(p.bytes(), new Uint8Array([0x21, 0x43, 0x65, 0x87]));
+  assertEquals(p.bytes(), Uint8Array.of(0x21, 0x43, 0x65, 0x87));
 });
 
 Deno.test("writeInt32LESync", { permissions: "none" }, () => {
   const p = new Buffer();
   writeInt32LESync(p, 0x87654321);
-  assertEquals(p.bytes(), new Uint8Array([0x21, 0x43, 0x65, 0x87]));
+  assertEquals(p.bytes(), Uint8Array.of(0x21, 0x43, 0x65, 0x87));
 });
 
 Deno.test("writeInt32BE", { permissions: "none" }, async () => {
@@ -459,13 +459,13 @@ Deno.test("writeInt32BE", { permissions: "none" }, async () => {
   const w = new BufWriter(p);
   await writeInt32BE(w, 0x87654321);
   await w.flush();
-  assertEquals(p.bytes(), new Uint8Array([0x87, 0x65, 0x43, 0x21]));
+  assertEquals(p.bytes(), Uint8Array.of(0x87, 0x65, 0x43, 0x21));
 });
 
 Deno.test("writeInt32BESync", { permissions: "none" }, () => {
   const p = new Buffer();
   writeInt32BESync(p, 0x87654321);
-  assertEquals(p.bytes(), new Uint8Array([0x87, 0x65, 0x43, 0x21]));
+  assertEquals(p.bytes(), Uint8Array.of(0x87, 0x65, 0x43, 0x21));
 });
 
 Deno.test("writeBigInt64LE", { permissions: "none" }, async () => {
@@ -475,7 +475,7 @@ Deno.test("writeBigInt64LE", { permissions: "none" }, async () => {
   await w.flush();
   assertEquals(
     p.bytes(),
-    new Uint8Array([0x21, 0x43, 0x65, 0x87, 0x21, 0x43, 0x65, 0x87]),
+    Uint8Array.of(0x21, 0x43, 0x65, 0x87, 0x21, 0x43, 0x65, 0x87),
   );
 });
 
@@ -484,7 +484,7 @@ Deno.test("writeBigInt64LESync", { permissions: "none" }, () => {
   writeBigInt64LESync(p, 0x8765432187654321n);
   assertEquals(
     p.bytes(),
-    new Uint8Array([0x21, 0x43, 0x65, 0x87, 0x21, 0x43, 0x65, 0x87]),
+    Uint8Array.of(0x21, 0x43, 0x65, 0x87, 0x21, 0x43, 0x65, 0x87),
   );
 });
 
@@ -495,7 +495,7 @@ Deno.test("writeBigInt64BE", { permissions: "none" }, async () => {
   await w.flush();
   assertEquals(
     p.bytes(),
-    new Uint8Array([0x87, 0x65, 0x43, 0x21, 0x87, 0x65, 0x43, 0x21]),
+    Uint8Array.of(0x87, 0x65, 0x43, 0x21, 0x87, 0x65, 0x43, 0x21),
   );
 });
 
@@ -504,7 +504,7 @@ Deno.test("writeBigInt64BESync", { permissions: "none" }, () => {
   writeBigInt64BESync(p, 0x8765432187654321n);
   assertEquals(
     p.bytes(),
-    new Uint8Array([0x87, 0x65, 0x43, 0x21, 0x87, 0x65, 0x43, 0x21]),
+    Uint8Array.of(0x87, 0x65, 0x43, 0x21, 0x87, 0x65, 0x43, 0x21),
   );
 });
 
@@ -513,13 +513,13 @@ Deno.test("writeVarint32", { permissions: "none" }, async () => {
   const w = new BufWriter(p);
   await writeVarint32(w, 0x87654321);
   await w.flush();
-  assertEquals(p.bytes(), new Uint8Array([0xa1, 0x86, 0x95, 0xbb, 0x08]));
+  assertEquals(p.bytes(), Uint8Array.of(0xa1, 0x86, 0x95, 0xbb, 0x08));
 });
 
 Deno.test("writeVarint32Sync", { permissions: "none" }, () => {
   const p = new Buffer();
   writeVarint32Sync(p, 0x87654321);
-  assertEquals(p.bytes(), new Uint8Array([0xa1, 0x86, 0x95, 0xbb, 0x08]));
+  assertEquals(p.bytes(), Uint8Array.of(0xa1, 0x86, 0x95, 0xbb, 0x08));
 });
 
 Deno.test("writeBigVarint64", { permissions: "none" }, async () => {
@@ -529,9 +529,7 @@ Deno.test("writeBigVarint64", { permissions: "none" }, async () => {
   await w.flush();
   assertEquals(
     p.bytes(),
-    new Uint8Array(
-      [0xa1, 0x86, 0x95, 0xbb, 0x98, 0xe4, 0xd0, 0xb2, 0x87, 0x01],
-    ),
+    Uint8Array.of(0xa1, 0x86, 0x95, 0xbb, 0x98, 0xe4, 0xd0, 0xb2, 0x87, 0x01),
   );
 });
 
@@ -540,9 +538,7 @@ Deno.test("writeBigVarint64Sync", { permissions: "none" }, () => {
   writeBigVarint64Sync(p, 0x8765432187654321n);
   assertEquals(
     p.bytes(),
-    new Uint8Array(
-      [0xa1, 0x86, 0x95, 0xbb, 0x98, 0xe4, 0xd0, 0xb2, 0x87, 0x01],
-    ),
+    Uint8Array.of(0xa1, 0x86, 0x95, 0xbb, 0x98, 0xe4, 0xd0, 0xb2, 0x87, 0x01),
   );
 });
 
@@ -555,10 +551,10 @@ Deno.test("writeBuffer", { permissions: "none" }, async () => {
       assertStrictEquals(w_, w);
       assertStrictEquals(length, 3);
     },
-    new Uint8Array([0x12, 0x34, 0x56]),
+    Uint8Array.of(0x12, 0x34, 0x56),
   );
   await w.flush();
-  assertEquals(p.bytes(), new Uint8Array([0x12, 0x34, 0x56]));
+  assertEquals(p.bytes(), Uint8Array.of(0x12, 0x34, 0x56));
 });
 
 Deno.test("writeBufferSync", { permissions: "none" }, () => {
@@ -569,9 +565,9 @@ Deno.test("writeBufferSync", { permissions: "none" }, () => {
       assertStrictEquals(p_, p);
       assertStrictEquals(length, 3);
     },
-    new Uint8Array([0x12, 0x34, 0x56]),
+    Uint8Array.of(0x12, 0x34, 0x56),
   );
-  assertEquals(p.bytes(), new Uint8Array([0x12, 0x34, 0x56]));
+  assertEquals(p.bytes(), Uint8Array.of(0x12, 0x34, 0x56));
 });
 
 Deno.test("writePacket", { permissions: "none" }, async () => {
@@ -583,10 +579,10 @@ Deno.test("writePacket", { permissions: "none" }, async () => {
       assertStrictEquals(w_, w);
       assertStrictEquals(length, 3);
     },
-    (p_) => p_.writeSync(new Uint8Array([0x12, 0x34, 0x56])),
+    (p_) => p_.writeSync(Uint8Array.of(0x12, 0x34, 0x56)),
   );
   await w.flush();
-  assertEquals(p.bytes(), new Uint8Array([0x12, 0x34, 0x56]));
+  assertEquals(p.bytes(), Uint8Array.of(0x12, 0x34, 0x56));
 });
 
 Deno.test("writePacketSync", { permissions: "none" }, () => {
@@ -597,7 +593,7 @@ Deno.test("writePacketSync", { permissions: "none" }, () => {
       assertStrictEquals(p_, p);
       assertStrictEquals(length, 3);
     },
-    (p_) => p_.writeSync(new Uint8Array([0x12, 0x34, 0x56])),
+    (p_) => p_.writeSync(Uint8Array.of(0x12, 0x34, 0x56)),
   );
-  assertEquals(p.bytes(), new Uint8Array([0x12, 0x34, 0x56]));
+  assertEquals(p.bytes(), Uint8Array.of(0x12, 0x34, 0x56));
 });

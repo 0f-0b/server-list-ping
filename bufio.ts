@@ -1,10 +1,7 @@
 import { encodeU32, encodeU64 } from "./deps/std/encoding/varint.ts";
-import {
-  Buffer,
-  BufReader,
-  BufWriter,
-  PartialReadError,
-} from "./deps/std/io/buffer.ts";
+import { Buffer } from "./deps/std/io/buffer.ts";
+import { BufReader, PartialReadError } from "./deps/std/io/buf_reader.ts";
+import { BufWriter } from "./deps/std/io/buf_writer.ts";
 
 export { Buffer, BufReader, BufWriter };
 
