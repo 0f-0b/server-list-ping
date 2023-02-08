@@ -10,7 +10,7 @@ export async function abortable<T>(
   signal?.addEventListener("abort", abort, { once: true });
   try {
     return await fn();
-  } catch (e) {
+  } catch (e: unknown) {
     signal?.throwIfAborted();
     throw e;
   } finally {

@@ -1,7 +1,7 @@
 import { encodeU32, encodeU64 } from "./deps/std/encoding/varint.ts";
-import { Buffer } from "./deps/std/io/buffer.ts";
 import { BufReader, PartialReadError } from "./deps/std/io/buf_reader.ts";
 import { BufWriter } from "./deps/std/io/buf_writer.ts";
+import { Buffer } from "./deps/std/io/buffer.ts";
 
 export { Buffer, BufReader, BufWriter };
 
@@ -65,7 +65,7 @@ export async function readFull(
 ): Promise<Uint8Array | null> {
   try {
     return await r.readFull(buf);
-  } catch (e) {
+  } catch (e: unknown) {
     if (!(e instanceof PartialReadError)) {
       throw e;
     }

@@ -29,7 +29,7 @@ await serve(async (req) => {
         signal: AbortSignal.timeout(30000),
       }),
     );
-  } catch (e) {
+  } catch (e: unknown) {
     if (e instanceof DOMException && e.name === "TimeoutError") {
       return new Response("Request timed out", { status: 504 });
     }

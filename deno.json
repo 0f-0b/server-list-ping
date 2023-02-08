@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
-    "noImplicitOverride": true,
-    "useUnknownInCatchVariables": true
+    "noImplicitOverride": true
   },
   "tasks": {
     "lint": "deno fmt --check && deno lint && deno check --all main.ts",
