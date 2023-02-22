@@ -29,14 +29,14 @@ export interface ServerListPingOptions {
 export async function serverListPing(
   options: ServerListPingOptions,
 ): Promise<unknown> {
-  const signal = options.signal;
+  let { hostname, port = defaultPort, signal } = options;
   signal?.throwIfAborted();
-  let { hostname, port = defaultPort } = options;
   if (port === defaultPort) {
     try {
       const [record] = await Deno.resolveDns(
         `_minecraft._tcp.${hostname}`,
         "SRV",
+        { signal },
       );
       if (record) {
         hostname = record.target;
