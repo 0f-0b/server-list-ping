@@ -1,1 +1,5 @@
-export * from "https://deno.land/std@0.178.0/encoding/varint.ts";
+export {
+  decode as decodeBigVarint64,
+  decode32 as decodeVarint32,
+  encode as encodeBigVarint64,
+} from "https://deno.land/std@0.185.0/encoding/varint.ts";

@@ -1,7 +1,7 @@
-import { encodeU32, encodeU64 } from "./deps/std/encoding/varint.ts";
+import { encodeBigVarint64 } from "./deps/std/encoding/varint.ts";
+import { Buffer } from "./deps/std/io/buffer.ts";
 import { BufReader, PartialReadError } from "./deps/std/io/buf_reader.ts";
 import { BufWriter } from "./deps/std/io/buf_writer.ts";
-import { Buffer } from "./deps/std/io/buffer.ts";
 
 export { Buffer, BufReader, BufWriter };
 const syncBuf8 = new Uint8Array(8);
@@ -394,7 +394,7 @@ export async function writeVarint32(
 }
 
 export function writeVarint32Sync(w: Buffer, value: number): undefined {
-  w.writeSync(encodeU32(value >>> 0));
+  w.writeSync(encodeBigVarint64(value >>> 0)[0]);
   return;
 }
 
@@ -416,7 +416,7 @@ export async function writeBigVarint64(
 }
 
 export function writeBigVarint64Sync(w: Buffer, value: bigint): undefined {
-  w.writeSync(encodeU64(BigInt.asUintN(64, value)));
+  w.writeSync(encodeBigVarint64(BigInt.asUintN(64, value))[0]);
   return;
 }
 
