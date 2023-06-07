@@ -7,7 +7,7 @@ import { serverListPing } from "./mod.ts";
 await serve(async (req) => {
   const url = new URL(req.url);
   if (url.pathname === "/") {
-    return new Response(`Usage: ${url.origin}/:serverAddress`, { status: 404 });
+    return new Response(`Usage: ${url.origin}/:serverAddress`);
   }
   const parser = new URL("dummy://");
   try {
