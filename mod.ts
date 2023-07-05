@@ -30,7 +30,6 @@ export async function serverListPing(
   options: ServerListPingOptions,
 ): Promise<unknown> {
   let { hostname, port = defaultPort, signal } = options;
-  signal?.throwIfAborted();
   if (port === defaultPort) {
     try {
       const [record] = await Deno.resolveDns(
@@ -45,12 +44,15 @@ export async function serverListPing(
     } catch {
       // ignored
     }
-    signal?.throwIfAborted();
   }
   let conn: Deno.Conn | undefined;
   try {
     return await abortable(signal, async () => {
       conn = await Deno.connect({ hostname, port });
+      if (signal?.aborted) {
+        conn.close();
+        throw signal.reason;
+      }
       const r = new BufReader(conn);
       const w = new BufWriter(conn);
       await writePacket(w, writeVarint32, (p) => {
