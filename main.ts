@@ -4,10 +4,29 @@ import { serve } from "./deps/std/http/server.ts";
 
 import { serverListPing } from "./mod.ts";
 
+const defaultTimeout = 10000;
+const maxTimeout = 120000;
 await serve(async (req) => {
   const url = new URL(req.url);
   if (url.pathname === "/") {
-    return new Response(`Usage: ${url.origin}/:serverAddress`);
+    return new Response(`Usage: ${url.origin}/:address`);
+  }
+  let timeout = defaultTimeout;
+  {
+    const timeoutParam = url.searchParams.get("timeout");
+    if (timeoutParam !== null) {
+      if (!/^\d+$/.test(timeoutParam)) {
+        return new Response("Timeout must be a non-negative integer", {
+          status: 400,
+        });
+      }
+      timeout = Number(timeoutParam);
+      if (timeout > maxTimeout) {
+        return new Response(`Timeout must be at most ${maxTimeout} ms`, {
+          status: 400,
+        });
+      }
+    }
   }
   const parser = new URL("dummy://");
   try {
@@ -26,7 +45,7 @@ await serve(async (req) => {
       await serverListPing({
         hostname: parser.hostname,
         port: parser.port ? parseInt(parser.port, 10) : undefined,
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(timeout),
       }),
     );
   } catch (e: unknown) {
