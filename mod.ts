@@ -47,31 +47,38 @@ export async function serverListPing(
     }
     signal?.throwIfAborted();
   }
-  const conn = await Deno.connect({ hostname, port });
-  return await abortable(signal, () => conn.close(), async () => {
-    const r = new BufReader(conn);
-    const w = new BufWriter(conn);
-    await writePacket(w, writeVarint32, (p) => {
-      writeVarint32Sync(p, 0);
-      writeVarint32Sync(p, -1);
-      writeBufferSync(p, writeVarint32Sync, encoder.encode(hostname));
-      writeInt16BESync(p, port);
-      writeVarint32Sync(p, 1);
+  let conn: Deno.Conn | undefined;
+  try {
+    return await abortable(signal, async () => {
+      conn = await Deno.connect({ hostname, port });
+      const r = new BufReader(conn);
+      const w = new BufWriter(conn);
+      await writePacket(w, writeVarint32, (p) => {
+        writeVarint32Sync(p, 0);
+        writeVarint32Sync(p, -1);
+        writeBufferSync(p, writeVarint32Sync, encoder.encode(hostname));
+        writeInt16BESync(p, port);
+        writeVarint32Sync(p, 1);
+      });
+      await writePacket(w, writeVarint32, (p) => {
+        writeVarint32Sync(p, 0);
+      });
+      await writePacket(w, writeVarint32, (p) => {
+        writeVarint32Sync(p, 1);
+        writeBigInt64BESync(p, 0n);
+      });
+      await w.flush();
+      const rp = new Buffer(
+        await readBuffer(r, readVarint32) ?? unexpectedEof(),
+      );
+      if (readVarint32Sync(rp) !== 0) {
+        throw new TypeError("Expected Response packet");
+      }
+      return JSON.parse(
+        decoder.decode(readBufferSync(rp, readVarint32Sync) ?? unexpectedEof()),
+      );
     });
-    await writePacket(w, writeVarint32, (p) => {
-      writeVarint32Sync(p, 0);
-    });
-    await writePacket(w, writeVarint32, (p) => {
-      writeVarint32Sync(p, 1);
-      writeBigInt64BESync(p, 0n);
-    });
-    await w.flush();
-    const rp = new Buffer(await readBuffer(r, readVarint32) ?? unexpectedEof());
-    if (readVarint32Sync(rp) !== 0) {
-      throw new TypeError("Expected Response packet");
-    }
-    return JSON.parse(
-      decoder.decode(readBufferSync(rp, readVarint32Sync) ?? unexpectedEof()),
-    );
-  });
+  } finally {
+    conn?.close();
+  }
 }

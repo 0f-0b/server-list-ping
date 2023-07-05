@@ -1,22 +1,21 @@
 export async function abortable<T>(
   signal: AbortSignal | undefined,
-  abort: () => unknown,
   fn: () => T,
 ): Promise<Awaited<T>> {
-  if (signal?.aborted) {
-    abort();
-    throw signal.reason;
-  }
-  signal?.addEventListener("abort", abort, { once: true });
-  try {
+  if (!signal) {
     return await fn();
-  } catch (e: unknown) {
-    signal?.throwIfAborted();
-    throw e;
-  } finally {
-    if (!signal?.aborted) {
-      signal?.removeEventListener("abort", abort);
-      abort();
-    }
   }
+  signal.throwIfAborted();
+  let onAbort: (reason: unknown) => unknown;
+  const aborted = new Promise<never>((_, reject) => onAbort = reject);
+  const promise = (async () => {
+    const abort = () => onAbort(signal.reason);
+    signal.addEventListener("abort", abort, { once: true });
+    try {
+      return await fn();
+    } finally {
+      signal.removeEventListener("abort", abort);
+    }
+  })();
+  return Promise.race([promise, aborted]);
 }

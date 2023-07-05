@@ -1,7 +1,7 @@
 import { encodeBigVarint64 } from "./deps/std/encoding/varint.ts";
-import { Buffer } from "./deps/std/io/buffer.ts";
 import { BufReader, PartialReadError } from "./deps/std/io/buf_reader.ts";
 import { BufWriter } from "./deps/std/io/buf_writer.ts";
+import { Buffer } from "./deps/std/io/buffer.ts";
 
 export { Buffer, BufReader, BufWriter };
 const syncBuf8 = new Uint8Array(8);
@@ -277,7 +277,6 @@ export async function writeInt8(
 export function writeInt8Sync(w: Buffer, value: number): undefined {
   syncView.setInt8(0, value);
   w.writeSync(syncBuf1);
-  return;
 }
 
 export async function writeInt16LE(
@@ -287,13 +286,11 @@ export async function writeInt16LE(
   value &= 0xffff;
   await writeInt8(w, value);
   await writeInt8(w, value >>> 8);
-  return;
 }
 
 export function writeInt16LESync(w: Buffer, value: number): undefined {
   syncView.setInt16(0, value, true);
   w.writeSync(syncBuf2);
-  return;
 }
 
 export async function writeInt16BE(
@@ -303,13 +300,11 @@ export async function writeInt16BE(
   value &= 0xffff;
   await writeInt8(w, value >>> 8);
   await writeInt8(w, value);
-  return;
 }
 
 export function writeInt16BESync(w: Buffer, value: number): undefined {
   syncView.setInt16(0, value);
   w.writeSync(syncBuf2);
-  return;
 }
 
 export async function writeInt32LE(
@@ -319,13 +314,11 @@ export async function writeInt32LE(
   value >>>= 0;
   await writeInt16LE(w, value);
   await writeInt16LE(w, value >>> 16);
-  return;
 }
 
 export function writeInt32LESync(w: Buffer, value: number): undefined {
   syncView.setInt32(0, value, true);
   w.writeSync(syncBuf4);
-  return;
 }
 
 export async function writeInt32BE(
@@ -335,13 +328,11 @@ export async function writeInt32BE(
   value >>>= 0;
   await writeInt16BE(w, value >>> 16);
   await writeInt16BE(w, value);
-  return;
 }
 
 export function writeInt32BESync(w: Buffer, value: number): undefined {
   syncView.setInt32(0, value);
   w.writeSync(syncBuf4);
-  return;
 }
 
 export async function writeBigInt64LE(
@@ -351,13 +342,11 @@ export async function writeBigInt64LE(
   value = BigInt.asUintN(64, value);
   await writeInt32LE(w, Number(BigInt.asUintN(32, value)));
   await writeInt32LE(w, Number(BigInt.asUintN(32, value >> 32n)));
-  return;
 }
 
 export function writeBigInt64LESync(w: Buffer, value: bigint): undefined {
   syncView.setBigInt64(0, value, true);
   w.writeSync(syncBuf8);
-  return;
 }
 
 export async function writeBigInt64BE(
@@ -367,13 +356,11 @@ export async function writeBigInt64BE(
   value = BigInt.asUintN(64, value);
   await writeInt32BE(w, Number(BigInt.asUintN(32, value >> 32n)));
   await writeInt32BE(w, Number(BigInt.asUintN(32, value)));
-  return;
 }
 
 export function writeBigInt64BESync(w: Buffer, value: bigint): undefined {
   syncView.setBigInt64(0, value);
   w.writeSync(syncBuf8);
-  return;
 }
 
 export async function writeVarint32(
@@ -390,12 +377,10 @@ export async function writeVarint32(
     }
     await writeInt8(w, b | 0x80);
   }
-  return;
 }
 
 export function writeVarint32Sync(w: Buffer, value: number): undefined {
   w.writeSync(encodeBigVarint64(value >>> 0)[0]);
-  return;
 }
 
 export async function writeBigVarint64(
@@ -412,12 +397,10 @@ export async function writeBigVarint64(
     }
     await writeInt8(w, b | 0x80);
   }
-  return;
 }
 
 export function writeBigVarint64Sync(w: Buffer, value: bigint): undefined {
   w.writeSync(encodeBigVarint64(BigInt.asUintN(64, value))[0]);
-  return;
 }
 
 export async function writeBuffer(
@@ -427,7 +410,6 @@ export async function writeBuffer(
 ): Promise<undefined> {
   await writeLength(w, buf.length);
   await w.write(buf);
-  return;
 }
 
 export function writeBufferSync(
@@ -437,7 +419,6 @@ export function writeBufferSync(
 ): undefined {
   writeLength(w, buf.length);
   w.writeSync(buf);
-  return;
 }
 
 export async function writePacket(
@@ -448,7 +429,6 @@ export async function writePacket(
   const buf = new Buffer();
   await fn(buf);
   await writeBuffer(w, writeLength, buf.bytes({ copy: false }));
-  return;
 }
 
 export function writePacketSync(
@@ -459,5 +439,4 @@ export function writePacketSync(
   const buf = new Buffer();
   fn(buf);
   writeBufferSync(w, writeLength, buf.bytes({ copy: false }));
-  return;
 }
