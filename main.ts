@@ -11,6 +11,9 @@ await serve(async (req) => {
   if (url.pathname === "/") {
     return new Response(`Usage: ${url.origin}/:address`);
   }
+  if (url.pathname === "/favicon.ico") {
+    return new Response(null, { status: 404 });
+  }
   let timeout = defaultTimeout;
   {
     const timeoutParam = url.searchParams.get("timeout");
