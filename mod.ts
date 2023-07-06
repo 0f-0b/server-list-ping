@@ -15,6 +15,7 @@ import {
   writeVarint32,
   writeVarint32Sync,
 } from "./bufio.ts";
+import { deadline } from "./deadline.ts";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -45,42 +46,43 @@ export async function serverListPing(
       // ignored
     }
   }
-  let conn: Deno.Conn | undefined;
-  try {
-    return await abortable(signal, async () => {
-      conn = await Deno.connect({ hostname, port });
-      if (signal?.aborted) {
+  return await deadline(signal, async () => {
+    const conn = await Deno.connect({ hostname, port });
+    try {
+      return await abortable(signal, () => conn.close(), async () => {
+        const r = new BufReader(conn);
+        const w = new BufWriter(conn);
+        await writePacket(w, writeVarint32, (p) => {
+          writeVarint32Sync(p, 0);
+          writeVarint32Sync(p, -1);
+          writeBufferSync(p, writeVarint32Sync, encoder.encode(hostname));
+          writeInt16BESync(p, port);
+          writeVarint32Sync(p, 1);
+        });
+        await writePacket(w, writeVarint32, (p) => {
+          writeVarint32Sync(p, 0);
+        });
+        await writePacket(w, writeVarint32, (p) => {
+          writeVarint32Sync(p, 1);
+          writeBigInt64BESync(p, 0n);
+        });
+        await w.flush();
+        const rp = new Buffer(
+          await readBuffer(r, readVarint32) ?? unexpectedEof(),
+        );
+        if (readVarint32Sync(rp) !== 0) {
+          throw new TypeError("Expected Response packet");
+        }
+        return JSON.parse(decoder.decode(
+          readBufferSync(rp, readVarint32Sync) ?? unexpectedEof(),
+        ));
+      });
+    } finally {
+      try {
         conn.close();
-        throw signal.reason;
+      } catch {
+        // ignored
       }
-      const r = new BufReader(conn);
-      const w = new BufWriter(conn);
-      await writePacket(w, writeVarint32, (p) => {
-        writeVarint32Sync(p, 0);
-        writeVarint32Sync(p, -1);
-        writeBufferSync(p, writeVarint32Sync, encoder.encode(hostname));
-        writeInt16BESync(p, port);
-        writeVarint32Sync(p, 1);
-      });
-      await writePacket(w, writeVarint32, (p) => {
-        writeVarint32Sync(p, 0);
-      });
-      await writePacket(w, writeVarint32, (p) => {
-        writeVarint32Sync(p, 1);
-        writeBigInt64BESync(p, 0n);
-      });
-      await w.flush();
-      const rp = new Buffer(
-        await readBuffer(r, readVarint32) ?? unexpectedEof(),
-      );
-      if (readVarint32Sync(rp) !== 0) {
-        throw new TypeError("Expected Response packet");
-      }
-      return JSON.parse(
-        decoder.decode(readBufferSync(rp, readVarint32Sync) ?? unexpectedEof()),
-      );
-    });
-  } finally {
-    conn?.close();
-  }
+    }
+  });
 }
