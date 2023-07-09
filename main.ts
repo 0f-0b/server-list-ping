@@ -1,12 +1,10 @@
 #!/usr/bin/env -S deno run --allow-net
 
-import { serve } from "./deps/std/http/server.ts";
-
 import { serverListPing } from "./mod.ts";
 
 const defaultTimeout = 10000;
 const maxTimeout = 120000;
-await serve(async (req) => {
+const server = Deno.serve(async (req) => {
   const url = new URL(req.url);
   if (url.pathname === "/") {
     return new Response(`Usage: ${url.origin}/:address`);
@@ -58,3 +56,4 @@ await serve(async (req) => {
     return new Response(`Request failed: ${e}`, { status: 502 });
   }
 });
+await server.finished;
