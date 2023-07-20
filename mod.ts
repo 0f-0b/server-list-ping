@@ -16,6 +16,7 @@ import {
   writeVarint32Sync,
 } from "./bufio.ts";
 import { deadline } from "./deadline.ts";
+import { tryClose } from "./try_close.ts";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -78,11 +79,7 @@ export async function serverListPing(
         ));
       });
     } finally {
-      try {
-        conn.close();
-      } catch {
-        // ignored
-      }
+      tryClose(conn);
     }
   });
 }

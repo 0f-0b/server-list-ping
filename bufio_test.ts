@@ -1,9 +1,7 @@
-import {
-  assertEquals,
-  assertRejects,
-  assertStrictEquals,
-  assertThrows,
-} from "./deps/std/testing/asserts.ts";
+import { assertEquals } from "./deps/std/assert/assert_equals.ts";
+import { assertRejects } from "./deps/std/assert/assert_rejects.ts";
+import { assertStrictEquals } from "./deps/std/assert/assert_strict_equals.ts";
+import { assertThrows } from "./deps/std/assert/assert_throws.ts";
 
 import {
   Buffer,
