@@ -42,13 +42,16 @@ const server = Deno.serve(async (req) => {
     return new Response("Invalid address", { status: 400 });
   }
   try {
-    return Response.json(
-      await serverListPing({
-        hostname: parser.hostname,
-        port: parser.port ? parseInt(parser.port, 10) : undefined,
-        signal: AbortSignal.timeout(timeout),
-      }),
-    );
+    const json = await serverListPing({
+      hostname: parser.hostname,
+      port: parser.port ? parseInt(parser.port, 10) : undefined,
+      signal: AbortSignal.timeout(timeout),
+    });
+    return new Response(json, {
+      headers: [
+        ["content-type", "application/json"],
+      ],
+    });
   } catch (e: unknown) {
     if (e instanceof DOMException && e.name === "TimeoutError") {
       return new Response("Request timed out", { status: 504 });

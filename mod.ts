@@ -63,7 +63,7 @@ export interface ServerListPingOptions {
 /** @tags allow-net */
 export async function serverListPing(
   options: ServerListPingOptions,
-): Promise<unknown> {
+): Promise<string> {
   let { hostname, port = defaultPort, protocol = -1, signal } = options;
   if (port === defaultPort) {
     try {
@@ -105,7 +105,9 @@ export async function serverListPing(
         if (readVarUint32LESync(rp) !== 0) {
           throw new TypeError("Expected to receive a Response packet");
         }
-        return JSON.parse(readTextSync(rp) ?? unexpectedEof());
+        const json = readTextSync(rp) ?? unexpectedEof();
+        JSON.parse(json);
+        return json;
       });
     } finally {
       tryClose(conn);
