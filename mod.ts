@@ -56,13 +56,15 @@ export const defaultPort = 25565;
 export interface ServerListPingOptions {
   hostname: string;
   port?: number;
+  protocol?: number;
   signal?: AbortSignal;
 }
 
+/** @tags allow-net */
 export async function serverListPing(
   options: ServerListPingOptions,
 ): Promise<unknown> {
-  let { hostname, port = defaultPort, signal } = options;
+  let { hostname, port = defaultPort, protocol = -1, signal } = options;
   if (port === defaultPort) {
     try {
       const [record] = await Deno.resolveDns(
@@ -86,7 +88,7 @@ export async function serverListPing(
         const w = new BufWriter(conn);
         await writePacket(w, (p) => {
           writeVarInt32LESync(p, 0);
-          writeVarInt32LESync(p, -1);
+          writeVarInt32LESync(p, protocol);
           writeTextSync(p, hostname);
           writeInt16BESync(p, port);
           writeVarInt32LESync(p, 1);

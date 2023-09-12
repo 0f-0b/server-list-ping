@@ -1,4 +1,4 @@
-export function tryClose(r: Deno.Closer): undefined {
+export function tryClose(r: { close(): unknown }): undefined {
   try {
     r.close();
   } catch {
