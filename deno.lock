@@ -1,5 +1,5 @@
 {
-  "version": "3",
+  "version": "2",
   "remote": {
     "https://cdn.jsdelivr.net/gh/0f-0b/binio@c83ad65a8d590ecfeefe311043f6a1c9650fddfb/deps/std/assert/assert.ts": "614f44c885d15fa7b17f06066f461a415fa75247fd798440baa156401efbe70f",
     "https://cdn.jsdelivr.net/gh/0f-0b/binio@c83ad65a8d590ecfeefe311043f6a1c9650fddfb/deps/std/io/buf_reader.ts": "38b0d9ba72b3573f1aa626c5c27d8282f206958874427c2cdc5e04e770e01aba",
