@@ -32,7 +32,7 @@ const server = Deno.serve(async (req) => {
   const parser = new URL("dummy://");
   try {
     const addr = decodeURIComponent(url.pathname.substring(1));
-    if (!addr.includes("/")) {
+    if (!/[/\\]/.test(addr)) {
       parser.host = addr;
     }
   } catch {
