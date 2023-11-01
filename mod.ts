@@ -102,7 +102,7 @@ export async function serverListPing(
         });
         await w.flush();
         const rp = await readPacket(r);
-        if (readVarUint32LESync(rp) !== 0) {
+        if (readVarUint32LESync(rp) ?? unexpectedEof() !== 0) {
           throw new TypeError("Expected to receive a Response packet");
         }
         const json = readTextSync(rp) ?? unexpectedEof();
