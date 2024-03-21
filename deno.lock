@@ -1,17 +1,14 @@
 {
   "version": "3",
   "remote": {
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@c83ad65a8d590ecfeefe311043f6a1c9650fddfb/deps/std/assert/assert.ts": "614f44c885d15fa7b17f06066f461a415fa75247fd798440baa156401efbe70f",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@c83ad65a8d590ecfeefe311043f6a1c9650fddfb/deps/std/io/buf_reader.ts": "38b0d9ba72b3573f1aa626c5c27d8282f206958874427c2cdc5e04e770e01aba",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@c83ad65a8d590ecfeefe311043f6a1c9650fddfb/deps/std/io/buf_writer.ts": "0e4182c64ca28b9f20d9898813d18f6e0dc14a3b794b2fcb8311dc2950f154cc",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@c83ad65a8d590ecfeefe311043f6a1c9650fddfb/deps/std/io/buffer.ts": "037a22e7f4dc7755980bd8ce73637b250e191c6b5a774c3f78004a5c2f993f57",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@c83ad65a8d590ecfeefe311043f6a1c9650fddfb/mod.ts": "bc6129c5239e01e7a6fd57f294e8dccc8f002cb6855eba9b1dff7ac3ab55fe54",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@c83ad65a8d590ecfeefe311043f6a1c9650fddfb/varint.ts": "c522009233a5a8252e0d931008f3c046403aad913705122a32fb3161e5a95bbf",
-    "https://deno.land/std@0.198.0/assert/assert.ts": "9a97dad6d98c238938e7540736b826440ad8c1c1e54430ca4c4e623e585607ee",
-    "https://deno.land/std@0.198.0/assert/assertion_error.ts": "4d0bde9b374dfbcbe8ac23f54f567b77024fb67dbb1906a852d67fe050d42f56",
-    "https://deno.land/std@0.198.0/bytes/copy.ts": "939d89e302a9761dcf1d9c937c7711174ed74c59eef40a1e4569a05c9de88219",
-    "https://deno.land/std@0.198.0/io/buf_reader.ts": "2bccff0878537ef201c5051fc0db0ce8196388c5ea69d2be6be1900fe48c5f4b",
-    "https://deno.land/std@0.198.0/io/buf_writer.ts": "48c33c8f00b61dcbc7958706741cec8e59810bd307bc6a326cbd474fe8346dfd",
-    "https://deno.land/std@0.198.0/io/buffer.ts": "4d6883daeb2e698579c4064170515683d69f40f3de019bfe46c5cf31e74ae793"
+    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/buffer_reader.ts": "67945c84c5c0e5ab6548207da14d488936caa13cc136292f7ad73b14248a3df6",
+    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/buffer_writer.ts": "23084add3ba77cba8c1d63a32c1bf2ce721ff0f43541dd587fa16bea6569b2c5",
+    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/buffered_readable_stream.ts": "716e90c877f4d293f2bc4931eecdbbc4d7620008dc5a8083096a353d71b5846d",
+    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/buffered_writable_stream.ts": "6f1e5896edfcc347152b3ddc070b1ddace05c28d241fdd6a1fb129b075cda0c6",
+    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/encode_varint.ts": "053fbb8200b240f02af66f2d60b3d43a3198db605b17ddce9610daa2cd95de99",
+    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/mod.ts": "6be19e95f2a6efbb2c23cbb48c695f699012f2b21b97a24608e7571f1404083d",
+    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/numeric.ts": "6c4880c15a35f6e06ec78fd82939eb1b999ed45f7f819810f8e3a413bab4b803",
+    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/read_full.ts": "028cde8886fbabdd6e933f3435d8cb1e8d96441e58fae463cd7bbd52578d33a1",
+    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/unexpected_eof.ts": "c510bbbe984258fefb1ac2dbe42e0b44ae27329e460855dd0fe7ae8bccebc0b8"
   }
 }

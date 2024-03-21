@@ -1,7 +1,8 @@
 import {
-  Buffer,
-  BufReader,
-  BufWriter,
+  BufferedReadableStream,
+  BufferedWritableStream,
+  BufferReader,
+  BufferWriter,
   readFull,
   readFullSync,
   readVarUint32LE,
@@ -15,12 +16,11 @@ import {
 
 import { abortable } from "./abortable.ts";
 import { deadline } from "./deadline.ts";
-import { tryClose } from "./try_close.ts";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-function readTextSync(r: Buffer): string | null {
+function readTextSync(r: BufferReader): string | null {
   const len = readVarUint32LESync(r);
   if (len === null) {
     return null;
@@ -29,26 +29,27 @@ function readTextSync(r: Buffer): string | null {
   return decoder.decode(bytes);
 }
 
-async function readPacket(r: BufReader): Promise<Buffer> {
+async function readPacket(r: ReadableStreamBYOBReader): Promise<BufferReader> {
   const len = await readVarUint32LE(r) ?? unexpectedEof();
   const bytes = await readFull(r, new Uint8Array(len)) ?? unexpectedEof();
-  return new Buffer(bytes);
+  return new BufferReader(bytes);
 }
 
-function writeTextSync(w: Buffer, str: string): undefined {
+function writeTextSync(w: BufferWriter, str: string): undefined {
   const bytes = encoder.encode(str);
   writeVarInt32LESync(w, bytes.length);
-  w.writeSync(bytes);
+  w.write(bytes);
 }
 
 async function writePacket(
-  w: BufWriter,
-  fn: (p: Buffer) => unknown,
+  w: WritableStreamDefaultWriter<Uint8Array>,
+  fn: (p: BufferWriter) => unknown,
 ): Promise<undefined> {
-  const buf = new Buffer();
-  await fn(buf);
-  await writeVarInt32LE(w, buf.length);
-  await w.write(buf.bytes({ copy: false }));
+  const packet = new BufferWriter();
+  await fn(packet);
+  const bytes = packet.bytes;
+  await writeVarInt32LE(w, bytes.length);
+  await w.write(bytes);
 }
 
 export const defaultPort = 25565;
@@ -81,36 +82,34 @@ export async function serverListPing(
     }
   }
   return await deadline(signal, async () => {
-    const conn = await Deno.connect({ hostname, port });
-    try {
-      return await abortable(signal, () => conn.close(), async () => {
-        const r = new BufReader(conn);
-        const w = new BufWriter(conn);
-        await writePacket(w, (p) => {
-          writeVarInt32LESync(p, 0);
-          writeVarInt32LESync(p, protocol);
-          writeTextSync(p, hostname);
-          writeInt16BESync(p, port);
-          writeVarInt32LESync(p, 1);
-        });
-        await writePacket(w, (p) => {
-          writeVarInt32LESync(p, 0);
-        });
-        await writePacket(w, (p) => {
-          writeVarInt32LESync(p, 1);
-          writeBigInt64BESync(p, 0n);
-        });
-        await w.flush();
-        const rp = await readPacket(r);
-        if (readVarUint32LESync(rp) ?? unexpectedEof() !== 0) {
-          throw new TypeError("Expected to receive a Response packet");
-        }
-        const json = readTextSync(rp) ?? unexpectedEof();
-        JSON.parse(json);
-        return json;
+    using conn = await Deno.connect({ hostname, port });
+    return await abortable(signal, () => conn.close(), async () => {
+      const r = new BufferedReadableStream(conn.readable).getReader({
+        mode: "byob",
       });
-    } finally {
-      tryClose(conn);
-    }
+      const w = new BufferedWritableStream(conn.writable).getWriter();
+      await writePacket(w, (p) => {
+        writeVarInt32LESync(p, 0);
+        writeVarInt32LESync(p, protocol);
+        writeTextSync(p, hostname);
+        writeInt16BESync(p, port);
+        writeVarInt32LESync(p, 1);
+      });
+      await writePacket(w, (p) => {
+        writeVarInt32LESync(p, 0);
+      });
+      await writePacket(w, (p) => {
+        writeVarInt32LESync(p, 1);
+        writeBigInt64BESync(p, 0n);
+      });
+      await w.write("flush");
+      const rp = await readPacket(r);
+      if (readVarUint32LESync(rp) ?? unexpectedEof() !== 0) {
+        throw new TypeError("Expected to receive a Response packet");
+      }
+      const json = readTextSync(rp) ?? unexpectedEof();
+      JSON.parse(json);
+      return json;
+    });
   });
 }
