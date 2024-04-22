@@ -10,8 +10,8 @@ import {
   unexpectedEof,
   writeBigInt64BESync,
   writeInt16BESync,
-  writeVarInt32LE,
-  writeVarInt32LESync,
+  writeVarUint32LE,
+  writeVarUint32LESync,
 } from "./deps/binio.ts";
 
 import { abortable } from "./abortable.ts";
@@ -39,7 +39,7 @@ async function readPacket(
 
 function writeTextSync(w: Uint8ArrayWriter, str: string): undefined {
   const bytes = encoder.encode(str);
-  writeVarInt32LESync(w, bytes.length);
+  writeVarUint32LESync(w, bytes.length);
   w.write(bytes);
 }
 
@@ -50,7 +50,7 @@ async function writePacket(
   const packet = new Uint8ArrayWriter();
   await fn(packet);
   const bytes = packet.bytes;
-  await writeVarInt32LE(w, bytes.length);
+  await writeVarUint32LE(w, bytes.length);
   await w.write(bytes);
 }
 
@@ -91,17 +91,17 @@ export async function serverListPing(
       const r = bufferedReadable.getReader({ mode: "byob" });
       const w = bufferedWritable.getWriter();
       await writePacket(w, (p) => {
-        writeVarInt32LESync(p, 0);
-        writeVarInt32LESync(p, protocol);
+        writeVarUint32LESync(p, 0);
+        writeVarUint32LESync(p, protocol);
         writeTextSync(p, hostname);
         writeInt16BESync(p, port);
-        writeVarInt32LESync(p, 1);
+        writeVarUint32LESync(p, 1);
       });
       await writePacket(w, (p) => {
-        writeVarInt32LESync(p, 0);
+        writeVarUint32LESync(p, 0);
       });
       await writePacket(w, (p) => {
-        writeVarInt32LESync(p, 1);
+        writeVarUint32LESync(p, 1);
         writeBigInt64BESync(p, 0n);
       });
       await w.write({ type: "flush" });
