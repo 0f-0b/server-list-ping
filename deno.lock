@@ -1,14 +1,14 @@
 {
   "version": "3",
-  "remote": {
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/buffer_reader.ts": "67945c84c5c0e5ab6548207da14d488936caa13cc136292f7ad73b14248a3df6",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/buffer_writer.ts": "23084add3ba77cba8c1d63a32c1bf2ce721ff0f43541dd587fa16bea6569b2c5",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/buffered_readable_stream.ts": "716e90c877f4d293f2bc4931eecdbbc4d7620008dc5a8083096a353d71b5846d",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/buffered_writable_stream.ts": "6f1e5896edfcc347152b3ddc070b1ddace05c28d241fdd6a1fb129b075cda0c6",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/encode_varint.ts": "053fbb8200b240f02af66f2d60b3d43a3198db605b17ddce9610daa2cd95de99",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/mod.ts": "6be19e95f2a6efbb2c23cbb48c695f699012f2b21b97a24608e7571f1404083d",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/numeric.ts": "6c4880c15a35f6e06ec78fd82939eb1b999ed45f7f819810f8e3a413bab4b803",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/read_full.ts": "028cde8886fbabdd6e933f3435d8cb1e8d96441e58fae463cd7bbd52578d33a1",
-    "https://cdn.jsdelivr.net/gh/0f-0b/binio@de6189a5c215950e15b390aa3e83fd2e48d9f8d7/unexpected_eof.ts": "c510bbbe984258fefb1ac2dbe42e0b44ae27329e460855dd0fe7ae8bccebc0b8"
-  }
+  "packages": {
+    "specifiers": {
+      "jsr:@ud2/binio@^0.1.0": "jsr:@ud2/binio@0.1.0"
+    },
+    "jsr": {
+      "@ud2/binio@0.1.0": {
+        "integrity": "4efc4ca1883dc4999be4a6c49ff0c05c3f5fde74c732b6b123da539f1bd76dd1"
+      }
+    }
+  },
+  "remote": {}
 }

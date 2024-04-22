@@ -1,12 +1,12 @@
 import {
   BufferedReadableStream,
   BufferedWritableStream,
-  BufferReader,
-  BufferWriter,
   readFull,
   readFullSync,
   readVarUint32LE,
   readVarUint32LESync,
+  Uint8ArrayReader,
+  Uint8ArrayWriter,
   unexpectedEof,
   writeBigInt64BESync,
   writeInt16BESync,
@@ -20,7 +20,7 @@ import { deadline } from "./deadline.ts";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-function readTextSync(r: BufferReader): string | null {
+function readTextSync(r: Uint8ArrayReader): string | null {
   const len = readVarUint32LESync(r);
   if (len === null) {
     return null;
@@ -29,13 +29,15 @@ function readTextSync(r: BufferReader): string | null {
   return decoder.decode(bytes);
 }
 
-async function readPacket(r: ReadableStreamBYOBReader): Promise<BufferReader> {
+async function readPacket(
+  r: ReadableStreamBYOBReader,
+): Promise<Uint8ArrayReader> {
   const len = await readVarUint32LE(r) ?? unexpectedEof();
   const bytes = await readFull(r, new Uint8Array(len)) ?? unexpectedEof();
-  return new BufferReader(bytes);
+  return new Uint8ArrayReader(bytes);
 }
 
-function writeTextSync(w: BufferWriter, str: string): undefined {
+function writeTextSync(w: Uint8ArrayWriter, str: string): undefined {
   const bytes = encoder.encode(str);
   writeVarInt32LESync(w, bytes.length);
   w.write(bytes);
@@ -43,9 +45,9 @@ function writeTextSync(w: BufferWriter, str: string): undefined {
 
 async function writePacket(
   w: WritableStreamDefaultWriter<Uint8Array>,
-  fn: (p: BufferWriter) => unknown,
+  fn: (p: Uint8ArrayWriter) => unknown,
 ): Promise<undefined> {
-  const packet = new BufferWriter();
+  const packet = new Uint8ArrayWriter();
   await fn(packet);
   const bytes = packet.bytes;
   await writeVarInt32LE(w, bytes.length);
@@ -83,11 +85,11 @@ export async function serverListPing(
   }
   return await deadline(signal, async () => {
     using conn = await Deno.connect({ hostname, port });
+    const bufferedReadable = new BufferedReadableStream(conn.readable);
+    const bufferedWritable = new BufferedWritableStream(conn.writable);
     return await abortable(signal, () => conn.close(), async () => {
-      const r = new BufferedReadableStream(conn.readable).getReader({
-        mode: "byob",
-      });
-      const w = new BufferedWritableStream(conn.writable).getWriter();
+      const r = bufferedReadable.getReader({ mode: "byob" });
+      const w = bufferedWritable.getWriter();
       await writePacket(w, (p) => {
         writeVarInt32LESync(p, 0);
         writeVarInt32LESync(p, protocol);
@@ -102,7 +104,7 @@ export async function serverListPing(
         writeVarInt32LESync(p, 1);
         writeBigInt64BESync(p, 0n);
       });
-      await w.write("flush");
+      await w.write({ type: "flush" });
       const rp = await readPacket(r);
       if (readVarUint32LESync(rp) ?? unexpectedEof() !== 0) {
         throw new TypeError("Expected to receive a Response packet");
