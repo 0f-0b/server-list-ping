@@ -6,16 +6,15 @@ export async function deadline<T>(
     return await fn();
   }
   signal.throwIfAborted();
-  let abort: (reason: unknown) => unknown;
-  const aborted = new Promise<never>((_, reject) => abort = reject);
+  const { promise: aborted, reject } = Promise.withResolvers<never>();
   const promise = (async () => {
-    const onAbort = () => abort(signal.reason);
-    signal.addEventListener("abort", onAbort, { once: true });
+    const abort = () => reject(signal.reason);
+    signal.addEventListener("abort", abort, { once: true });
     try {
       return await fn();
     } finally {
-      signal.removeEventListener("abort", onAbort);
+      signal.removeEventListener("abort", abort);
     }
   })();
-  return Promise.race([promise, aborted]);
+  return await Promise.race([promise, aborted]);
 }
