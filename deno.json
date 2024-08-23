@@ -1,6 +1,22 @@
 {
+  "name": "@ud2/server-list-ping",
+  "version": "0.0.0",
+  "exports": "./mod.ts",
+  "imports": {
+    "@ud2/binio": "jsr:@ud2/binio@^0.1.0"
+  },
   "compilerOptions": {
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "publish": {
+    "exclude": [
+      ".github",
+      "deno.lock",
+      "**/test.ts",
+      "**/*_test.ts"
+    ]
   },
   "lint": {
     "rules": {

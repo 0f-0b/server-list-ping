@@ -2,13 +2,18 @@
   "version": "3",
   "packages": {
     "specifiers": {
-      "jsr:@ud2/binio@^0.1.0": "jsr:@ud2/binio@0.1.0"
+      "jsr:@ud2/binio@^0.1.0": "jsr:@ud2/binio@0.1.1"
     },
     "jsr": {
-      "@ud2/binio@0.1.0": {
-        "integrity": "4efc4ca1883dc4999be4a6c49ff0c05c3f5fde74c732b6b123da539f1bd76dd1"
+      "@ud2/binio@0.1.1": {
+        "integrity": "f891c97a3c622647e27137c47b8b8bbc0313dcf5bcb9d61ef9ba3ee17e5e6a45"
       }
     }
   },
-  "remote": {}
+  "remote": {},
+  "workspace": {
+    "dependencies": [
+      "jsr:@ud2/binio@^0.1.0"
+    ]
+  }
 }

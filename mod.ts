@@ -12,7 +12,7 @@ import {
   writeInt16BESync,
   writeVarUint32LE,
   writeVarUint32LESync,
-} from "./deps/binio.ts";
+} from "@ud2/binio";
 
 import { abortable } from "./abortable.ts";
 import { deadline } from "./deadline.ts";
@@ -58,9 +58,9 @@ export const defaultPort = 25565;
 
 export interface ServerListPingOptions {
   hostname: string;
-  port?: number;
-  protocol?: number;
-  signal?: AbortSignal;
+  port?: number | undefined;
+  protocol?: number | undefined;
+  signal?: AbortSignal | undefined;
 }
 
 /** @tags allow-net */
@@ -73,7 +73,7 @@ export async function serverListPing(
       const [record] = await Deno.resolveDns(
         `_minecraft._tcp.${hostname}`,
         "SRV",
-        { signal },
+        signal && { signal },
       );
       if (record) {
         hostname = record.target;

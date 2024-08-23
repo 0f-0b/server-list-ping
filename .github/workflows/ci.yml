@@ -1,0 +1,21 @@
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: 1
+      - name: Lint
+        run: deno task lint
+      - name: Test
+        run: deno task test
+      - name: Publish
+        run: deno run -A jsr:@david/publish-on-tag@0.1.4
