@@ -5,7 +5,7 @@ import { serverListPing } from "./mod.ts";
 const defaultTimeout = 10000;
 const maxTimeout = 120000;
 export default {
-  async fetch(req: Request): Promise<Response> {
+  async fetch(req) {
     const url = new URL(req.url);
     if (url.pathname === "/") {
       return new Response(`Usage: ${url.origin}/:address`);
@@ -71,11 +71,11 @@ export default {
           ["content-type", "application/json"],
         ],
       });
-    } catch (e: unknown) {
+    } catch (e) {
       if (e instanceof DOMException && e.name === "TimeoutError") {
         return new Response("Request timed out", { status: 504 });
       }
       return new Response(`Request failed: ${e}`, { status: 502 });
     }
   },
-};
+} satisfies Deno.ServeDefaultExport;
