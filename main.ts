@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno serve --allow-net
+#!/usr/bin/env -S deno serve --allow-import=jsr.io:443 --allow-net
 
 import { serverListPing } from "./mod.ts";
 
@@ -6,6 +6,14 @@ const defaultTimeout = 10000;
 const maxTimeout = 120000;
 export default {
   async fetch(req) {
+    if (!(req.method === "GET" || req.method === "HEAD")) {
+      return new Response(null, {
+        status: 405,
+        headers: [
+          ["allow", "GET, HEAD"],
+        ],
+      });
+    }
     const url = new URL(req.url);
     if (url.pathname === "/") {
       return new Response(`Usage: ${url.origin}/:address`);
