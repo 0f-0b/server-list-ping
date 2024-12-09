@@ -73,7 +73,8 @@ export async function serverListPing(
       const [record] = await Deno.resolveDns(
         `_minecraft._tcp.${hostname}`,
         "SRV",
-        signal && { signal },
+        // @ts-expect-error Deno typings are not compatible with `exactOptionalPropertyTypes` yet
+        { signal },
       );
       if (record) {
         hostname = record.target;
@@ -84,7 +85,8 @@ export async function serverListPing(
     }
   }
   return await deadline(signal, async () => {
-    using conn = await Deno.connect({ hostname, port });
+    // @ts-expect-error Deno typings are not compatible with `exactOptionalPropertyTypes` yet
+    using conn = await Deno.connect({ hostname, port, signal });
     const bufferedReadable = new BufferedReadableStream(conn.readable);
     const bufferedWritable = new BufferedWritableStream(conn.writable);
     return await abortable(signal, () => conn.close(), async () => {
@@ -107,7 +109,7 @@ export async function serverListPing(
       await w.write({ type: "flush" });
       const rp = await readPacket(r);
       if (readVarUint32LESync(rp) ?? unexpectedEof() !== 0) {
-        throw new TypeError("Expected to receive a Response packet");
+        throw new TypeError("Expected to receive a status_response packet");
       }
       const json = readTextSync(rp) ?? unexpectedEof();
       JSON.parse(json);

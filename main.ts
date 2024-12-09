@@ -80,7 +80,7 @@ const handler = async (req: Request) => {
       hostname: parser.hostname,
       port: parser.port ? parseInt(parser.port, 10) : undefined,
       protocol,
-      signal: AbortSignal.timeout(timeout),
+      signal: AbortSignal.any([req.signal, AbortSignal.timeout(timeout)]),
     });
     return new Response(json, {
       headers: [
