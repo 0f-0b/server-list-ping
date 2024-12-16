@@ -5,23 +5,6 @@ import { serverListPing } from "./mod.ts";
 const defaultTimeout = 10000;
 const maxTimeout = 120000;
 const handler = async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: [
-        ["access-control-allow-methods", "*"],
-        ["access-control-allow-headers", "*"],
-        ["access-control-max-age", "86400"],
-      ],
-    });
-  }
-  if (!(req.method === "GET" || req.method === "HEAD")) {
-    return new Response(null, {
-      status: 405,
-      headers: [
-        ["allow", "GET, HEAD"],
-      ],
-    });
-  }
   const url = new URL(req.url);
   if (url.pathname === "/") {
     return new Response(`Usage: ${url.origin}/:address`);
@@ -96,7 +79,26 @@ const handler = async (req: Request) => {
 };
 export default {
   async fetch(req) {
+    if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+      return new Response(null, {
+        status: 501,
+        headers: [
+          ["connection", "close"],
+        ],
+      });
+    }
+    if (req.method === "OPTIONS") {
+      return new Response(null, {
+        headers: [
+          ["access-control-allow-origin", "*"],
+          ["access-control-allow-methods", "*"],
+          ["access-control-allow-headers", "*"],
+          ["access-control-max-age", "86400"],
+        ],
+      });
+    }
     const res = await handler(req);
+    req.headers.append("allow", "GET, HEAD, OPTIONS");
     res.headers.append("access-control-allow-origin", "*");
     return res;
   },
