@@ -54,21 +54,37 @@ async function writePacket(
   await w.write(bytes);
 }
 
-export const defaultPort = 25565;
+/** The default port of a Minecraft server. */
+export const DEFAULT_PORT = 25565;
 
+/** Options that can be passed to {@linkcode serverListPing}. */
 export interface ServerListPingOptions {
+  /** The hostname or the IP address of the server. */
   hostname: string;
+  /** The port of the server. Defaults to {@linkcode DEFAULT_PORT}. */
   port?: number | undefined;
+  /**
+   * The [protocol version](https://minecraft.wiki/w/Protocol_version). The
+   * vanilla server does not use this information. Defaults to `-1`.
+   */
   protocol?: number | undefined;
+  /** A signal to abort the query. */
   signal?: AbortSignal | undefined;
 }
 
-/** @tags allow-net */
+/**
+ * Queries a Minecraft server via
+ * [Server List Ping](https://wiki.vg/Server_List_Ping).
+ *
+ * @returns A {@linkcode Promise} that fulfills with the JSON response.
+ *
+ * @tags allow-net
+ */
 export async function serverListPing(
   options: ServerListPingOptions,
 ): Promise<string> {
-  let { hostname, port = defaultPort, protocol = -1, signal } = options;
-  if (port === defaultPort) {
+  let { hostname, port = DEFAULT_PORT, protocol = -1, signal } = options;
+  if (port === DEFAULT_PORT) {
     try {
       const [record] = await Deno.resolveDns(
         `_minecraft._tcp.${hostname}`,
