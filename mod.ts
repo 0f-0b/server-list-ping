@@ -68,6 +68,8 @@ export interface ServerListPingOptions {
    * vanilla server does not use this information. Defaults to `-1`.
    */
   protocol?: number | undefined;
+  /** If `true`, do not resolve SRV records. */
+  ignoreSRV?: boolean | undefined;
   /** A signal to abort the query. */
   signal?: AbortSignal | undefined;
 }
@@ -83,8 +85,14 @@ export interface ServerListPingOptions {
 export async function serverListPing(
   options: ServerListPingOptions,
 ): Promise<string> {
-  let { hostname, port = DEFAULT_PORT, protocol = -1, signal } = options;
-  if (port === DEFAULT_PORT) {
+  let {
+    hostname,
+    port = DEFAULT_PORT,
+    protocol = -1,
+    ignoreSRV,
+    signal,
+  } = options;
+  if (!ignoreSRV && port === DEFAULT_PORT) {
     try {
       const [record] = await Deno.resolveDns(
         `_minecraft._tcp.${hostname}`,

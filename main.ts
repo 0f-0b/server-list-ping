@@ -13,32 +13,33 @@ const handler = async (req: Request) => {
     return new Response(null, { status: 404 });
   }
   const parseErrors: string[] = [];
+  const ignoreSRV = url.searchParams.has("ignore-srv");
   let protocol: number | undefined;
   parseProtocol: {
-    const protocolParam = url.searchParams.get("protocol");
-    if (protocolParam === null) {
+    const value = url.searchParams.get("protocol");
+    if (!value) {
       break parseProtocol;
     }
-    if (!/^-?\d+$/.test(protocolParam)) {
+    if (!/^-?\d+$/.test(value)) {
       parseErrors.push("Protocol version must be an integer");
       break parseProtocol;
     }
-    protocol = Number(protocolParam);
+    protocol = Number(value);
     if ((protocol | 0) !== protocol) {
       parseErrors.push("Protocol version must fit in 32 bits");
     }
   }
   let timeout = defaultTimeout;
   parseTimeout: {
-    const timeoutParam = url.searchParams.get("timeout");
-    if (timeoutParam === null) {
+    const value = url.searchParams.get("timeout");
+    if (!value) {
       break parseTimeout;
     }
-    if (!/^\d+$/.test(timeoutParam)) {
+    if (!/^\d+$/.test(value)) {
       parseErrors.push("Timeout must be a non-negative integer");
       break parseTimeout;
     }
-    timeout = Number(timeoutParam);
+    timeout = Number(value);
     if (timeout > maxTimeout) {
       parseErrors.push(`Timeout must be at most ${maxTimeout} ms`);
     }
@@ -63,6 +64,7 @@ const handler = async (req: Request) => {
       hostname: parser.hostname,
       port: parser.port ? parseInt(parser.port, 10) : undefined,
       protocol,
+      ignoreSRV,
       signal: AbortSignal.any([req.signal, AbortSignal.timeout(timeout)]),
     });
     return new Response(json, {
