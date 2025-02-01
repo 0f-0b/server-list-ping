@@ -18,7 +18,7 @@ import { abortable } from "./abortable.ts";
 import { deadline } from "./deadline.ts";
 
 const encoder = new TextEncoder();
-const decoder = new TextDecoder();
+const decoder = new TextDecoder(undefined, { ignoreBOM: true });
 
 function readTextSync(r: Uint8ArrayReader): string | null {
   const len = readVarUint32LESync(r);
