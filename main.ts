@@ -98,7 +98,7 @@ export default {
       });
     }
     const res = await handler(req);
-    req.headers.append("allow", "GET, HEAD, OPTIONS");
+    res.headers.append("allow", "GET, HEAD, OPTIONS");
     res.headers.append("access-control-allow-origin", "*");
     return res;
   },
