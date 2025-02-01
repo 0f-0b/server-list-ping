@@ -44,7 +44,7 @@ function writeTextSync(w: Uint8ArrayWriter, str: string): undefined {
 }
 
 async function writePacket(
-  w: WritableStreamDefaultWriter<Uint8Array>,
+  w: WritableStreamDefaultWriter<Uint8Array<ArrayBuffer>>,
   fn: (p: Uint8ArrayWriter) => unknown,
 ): Promise<undefined> {
   const packet = new Uint8ArrayWriter();

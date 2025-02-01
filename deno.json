@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "exports": "./mod.ts",
   "imports": {
-    "@ud2/binio": "jsr:@ud2/binio@^0.1.0"
+    "@ud2/binio": "jsr:@ud2/binio@^0.2.0"
   },
   "compilerOptions": {
     "exactOptionalPropertyTypes": true
