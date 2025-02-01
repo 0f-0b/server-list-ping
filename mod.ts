@@ -127,9 +127,7 @@ export async function serverListPing(
       if (readVarUint32LESync(rp) ?? unexpectedEof() !== 0) {
         throw new TypeError("Expected to receive a status_response packet");
       }
-      const json = readTextSync(rp) ?? unexpectedEof();
-      JSON.parse(json);
-      return json;
+      return readTextSync(rp) ?? unexpectedEof();
     });
   });
 }
