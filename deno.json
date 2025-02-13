@@ -1,6 +1,5 @@
 {
   "name": "@ud2/server-list-ping",
-  "version": "0.0.0",
   "exports": "./mod.ts",
   "imports": {
     "@ud2/binio": "jsr:@ud2/binio@^0.2.0"

@@ -3,7 +3,7 @@ import {
   BufferedWritableStream,
   readFull,
   readFullSync,
-  readVarUint32LE,
+  readUint8,
   readVarUint32LESync,
   Uint8ArrayReader,
   Uint8ArrayWriter,
@@ -20,6 +20,30 @@ import { deadline } from "./deadline.ts";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder(undefined, { ignoreBOM: true });
 
+async function readVarUint21LE(
+  r: ReadableStreamBYOBReader,
+): Promise<number | null> {
+  let result = 0;
+  let len = 0;
+  for (;;) {
+    const b = await readUint8(r);
+    if (b === null) {
+      if (len > 0) {
+        unexpectedEof();
+      }
+      return null;
+    }
+    result |= (b & 0x7f) << (len * 7);
+    if (!(b & 0x80)) {
+      break;
+    }
+    if (++len === 3) {
+      throw new TypeError("Varint is too long");
+    }
+  }
+  return result;
+}
+
 function readTextSync(r: Uint8ArrayReader): string | null {
   const len = readVarUint32LESync(r);
   if (len === null) {
@@ -32,7 +56,7 @@ function readTextSync(r: Uint8ArrayReader): string | null {
 async function readPacket(
   r: ReadableStreamBYOBReader,
 ): Promise<Uint8ArrayReader> {
-  const len = await readVarUint32LE(r) ?? unexpectedEof();
+  const len = await readVarUint21LE(r) ?? unexpectedEof();
   const bytes = await readFull(r, new Uint8Array(len)) ?? unexpectedEof();
   return new Uint8ArrayReader(bytes);
 }
