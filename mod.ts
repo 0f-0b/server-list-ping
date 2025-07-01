@@ -8,7 +8,6 @@ import {
   Uint8ArrayReader,
   Uint8ArrayWriter,
   unexpectedEof,
-  writeBigInt64BESync,
   writeInt16BESync,
   writeVarUint32LE,
   writeVarUint32LESync,
@@ -149,10 +148,6 @@ export async function serverListPing(
       });
       await writePacket(w, (p) => {
         writeVarUint32LESync(p, 0);
-      });
-      await writePacket(w, (p) => {
-        writeVarUint32LESync(p, 1);
-        writeBigInt64BESync(p, 0n);
       });
       await w.write({ type: "flush" });
       const rp = await readPacket(r);
