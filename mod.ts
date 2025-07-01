@@ -156,7 +156,7 @@ export async function serverListPing(
       });
       await w.write({ type: "flush" });
       const rp = await readPacket(r);
-      if (readVarUint32LESync(rp) ?? unexpectedEof() !== 0) {
+      if ((readVarUint32LESync(rp) ?? unexpectedEof()) !== 0) {
         throw new TypeError("Expected to receive a status_response packet");
       }
       return readTextSync(rp) ?? unexpectedEof();
