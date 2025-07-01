@@ -100,7 +100,7 @@ export interface ServerListPingOptions {
 
 /**
  * Queries a Minecraft server via
- * [Server List Ping](https://wiki.vg/Server_List_Ping).
+ * [Server List Ping](https://minecraft.wiki/w/Java_Edition_protocol/Server_List_Ping).
  *
  * @returns A {@linkcode Promise} that fulfills with the JSON response.
  *
