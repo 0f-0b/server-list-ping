@@ -43,10 +43,13 @@ async function readVarUint21LE(
   return result;
 }
 
-function readTextSync(r: Uint8ArrayReader): string | null {
+function readStringSync(r: Uint8ArrayReader): string | null {
   const len = readVarUint32LESync(r);
   if (len === null) {
     return null;
+  }
+  if (len === 0) {
+    return "";
   }
   const bytes = readFullSync(r, new Uint8Array(len)) ?? unexpectedEof();
   return decoder.decode(bytes);
@@ -60,7 +63,7 @@ async function readPacket(
   return new Uint8ArrayReader(bytes);
 }
 
-function writeTextSync(w: Uint8ArrayWriter, str: string): undefined {
+function writeStringSync(w: Uint8ArrayWriter, str: string): undefined {
   const bytes = encoder.encode(str);
   writeVarUint32LESync(w, bytes.length);
   w.write(bytes);
@@ -142,7 +145,7 @@ export async function serverListPing(
       await writePacket(w, (p) => {
         writeVarUint32LESync(p, 0);
         writeVarUint32LESync(p, protocol);
-        writeTextSync(p, hostname);
+        writeStringSync(p, hostname);
         writeInt16BESync(p, port);
         writeVarUint32LESync(p, 1);
       });
@@ -154,7 +157,7 @@ export async function serverListPing(
       if ((readVarUint32LESync(rp) ?? unexpectedEof()) !== 0) {
         throw new TypeError("Expected to receive a status_response packet");
       }
-      return readTextSync(rp) ?? unexpectedEof();
+      return readStringSync(rp) ?? unexpectedEof();
     });
   });
 }
