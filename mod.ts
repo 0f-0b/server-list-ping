@@ -13,7 +13,6 @@ import {
   writeVarUint32LESync,
 } from "@ud2/binio";
 
-import { abortable } from "./abortable.ts";
 import { deadline } from "./deadline.ts";
 
 const encoder = new TextEncoder();
@@ -134,30 +133,28 @@ export async function serverListPing(
       // ignored
     }
   }
+  // @ts-expect-error Deno typings are not compatible with `exactOptionalPropertyTypes` yet
+  using conn = await Deno.connect({ hostname, port, signal });
+  const bufferedReadable = new BufferedReadableStream(conn.readable);
+  const bufferedWritable = new BufferedWritableStream(conn.writable);
   return await deadline(signal, async () => {
-    // @ts-expect-error Deno typings are not compatible with `exactOptionalPropertyTypes` yet
-    using conn = await Deno.connect({ hostname, port, signal });
-    const bufferedReadable = new BufferedReadableStream(conn.readable);
-    const bufferedWritable = new BufferedWritableStream(conn.writable);
-    return await abortable(signal, () => conn.close(), async () => {
-      const r = bufferedReadable.getReader({ mode: "byob" });
-      const w = bufferedWritable.getWriter();
-      await writePacket(w, (p) => {
-        writeVarUint32LESync(p, 0);
-        writeVarUint32LESync(p, protocol);
-        writeStringSync(p, hostname);
-        writeInt16BESync(p, port);
-        writeVarUint32LESync(p, 1);
-      });
-      await writePacket(w, (p) => {
-        writeVarUint32LESync(p, 0);
-      });
-      await w.write({ type: "flush" });
-      const rp = await readPacket(r);
-      if ((readVarUint32LESync(rp) ?? unexpectedEof()) !== 0) {
-        throw new TypeError("Expected to receive a status_response packet");
-      }
-      return readStringSync(rp) ?? unexpectedEof();
+    const r = bufferedReadable.getReader({ mode: "byob" });
+    const w = bufferedWritable.getWriter();
+    await writePacket(w, (p) => {
+      writeVarUint32LESync(p, 0);
+      writeVarUint32LESync(p, protocol);
+      writeStringSync(p, hostname);
+      writeInt16BESync(p, port);
+      writeVarUint32LESync(p, 1);
     });
+    await writePacket(w, (p) => {
+      writeVarUint32LESync(p, 0);
+    });
+    await w.write({ type: "flush" });
+    const rp = await readPacket(r);
+    if ((readVarUint32LESync(rp) ?? unexpectedEof()) !== 0) {
+      throw new TypeError("Expected to receive a status_response packet");
+    }
+    return readStringSync(rp) ?? unexpectedEof();
   });
 }
