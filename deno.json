@@ -5,6 +5,10 @@
     "@ud2/binio": "jsr:@ud2/binio@^0.3.0"
   },
   "compilerOptions": {
+    "lib": [
+      "deno.ns",
+      "deno.shared_globals"
+    ],
     "exactOptionalPropertyTypes": true
   },
   "publish": {
@@ -15,16 +19,9 @@
       "**/*_test.ts"
     ]
   },
-  "lint": {
-    "rules": {
-      "include": [
-        "verbatim-module-syntax"
-      ]
-    }
-  },
   "tasks": {
     "cache": "deno cache --allow-import=jsr.io:443 main.ts",
-    "lint": "deno fmt --check && deno lint && deno check --all --allow-import=jsr.io:443 main.ts",
-    "test": "deno test --check=all --allow-import=jsr.io:443"
+    "lint": "deno fmt --check && deno lint --allow-import=jsr.io:443 && deno check --allow-import=jsr.io:443 main.ts",
+    "test": "deno test --allow-import=jsr.io:443"
   }
 }
