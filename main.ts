@@ -2,75 +2,117 @@
 
 import { serverListPing } from "./mod.ts";
 
+const integerRE = /^-?\d+$/;
+const unsignedIntegerRE = /^\d+$/;
+const bracketedHostRE = /^\[([^:\]]*:[^\]]*)](?::(\d*))?$/;
+
+function parseAddr(input: string): {
+  hostname: string;
+  port: number | undefined;
+} | null {
+  let hostname: string;
+  let portString: string | undefined;
+  if (input.startsWith("[")) {
+    const match = bracketedHostRE.exec(input);
+    if (!match) {
+      return null;
+    }
+    ({ 1: hostname, 2: portString } = match);
+  } else {
+    const parts = input.split(":", 3);
+    if (parts.length === 2) {
+      ({ 0: hostname, 1: portString } = parts);
+    } else {
+      hostname = input;
+    }
+  }
+  let port: number | undefined;
+  if (portString) {
+    if (!integerRE.test(portString)) {
+      return null;
+    }
+    port = Number(portString) || 0;
+    if (port < 0 || port > 65535) {
+      return null;
+    }
+  }
+  return { hostname, port };
+}
+
 const defaultTimeout = 10000;
 const maxTimeout = 120000;
-const handler = async (req: Request) => {
-  const url = new URL(req.url);
-  if (url.pathname === "/") {
-    return new Response(`Usage: ${url.origin}/:address`);
+const handler = async (
+  signal: AbortSignal,
+  path: string,
+  params: URLSearchParams,
+) => {
+  let addr: string;
+  try {
+    addr = decodeURIComponent(path.substring(1));
+  } catch {
+    return new Response("Malformed URI", { status: 400 });
   }
-  if (url.pathname === "/favicon.ico") {
-    return new Response(null, { status: 404 });
+  const parse = parseAddr(addr);
+  if (!parse) {
+    return new Response("Invalid address", { status: 400 });
   }
-  const parseErrors: string[] = [];
-  const ignoreSRV = url.searchParams.has("ignore-srv");
-  let protocol: number | undefined;
-  parseProtocol: {
-    const value = url.searchParams.get("protocol");
-    if (!value) {
-      break parseProtocol;
-    }
-    if (!/^-?\d+$/.test(value)) {
-      parseErrors.push("Protocol version must be an integer");
-      break parseProtocol;
-    }
-    protocol = Number(value);
-    if ((protocol | 0) !== protocol) {
-      parseErrors.push("Protocol version must fit in 32 bits");
-    }
+  const { hostname, port } = parse;
+  if (!hostname) {
+    return new Response("Empty hostname", { status: 400 });
   }
   let timeout = defaultTimeout;
-  parseTimeout: {
-    const value = url.searchParams.get("timeout");
-    if (!value) {
-      break parseTimeout;
+  let protocol: number | undefined;
+  let ignoreSRV = false;
+  for (const [name, value] of params) {
+    switch (name) {
+      case "timeout":
+        if (!unsignedIntegerRE.test(value)) {
+          return new Response(
+            `Value of parameter 'timeout' must be an unsigned integer; got '${value}'`,
+            { status: 400 },
+          );
+        }
+        timeout = Number(value);
+        if (timeout > maxTimeout) {
+          return new Response(
+            `Value of parameter 'timeout' must be no greater than ${maxTimeout}; got '${value}'`,
+            { status: 400 },
+          );
+        }
+        break;
+      case "protocol":
+        if (!integerRE.test(value)) {
+          return new Response(
+            `Value of parameter 'protocol' must be an integer; got '${value}'`,
+            { status: 400 },
+          );
+        }
+        protocol = Number(value);
+        if ((protocol | 0) !== protocol) {
+          return new Response(
+            `Value of parameter 'protocol' must fit in 32 bits; got '${value}'`,
+            { status: 400 },
+          );
+        }
+        break;
+      case "ignore-srv":
+        ignoreSRV = true;
+        break;
     }
-    if (!/^\d+$/.test(value)) {
-      parseErrors.push("Timeout must be a non-negative integer");
-      break parseTimeout;
-    }
-    timeout = Number(value);
-    if (timeout > maxTimeout) {
-      parseErrors.push(`Timeout must be at most ${maxTimeout} ms`);
-    }
-  }
-  const parser = new URL("dummy://");
-  try {
-    const addr = decodeURIComponent(url.pathname.substring(1));
-    if (!/[/\\]/.test(addr)) {
-      parser.host = addr;
-    }
-  } catch {
-    // handled below
-  }
-  if (!parser.hostname) {
-    parseErrors.push("Invalid address");
-  }
-  if (parseErrors.length !== 0) {
-    return new Response(parseErrors.join("\n"), { status: 400 });
   }
   try {
     const json = await serverListPing({
-      hostname: parser.hostname,
-      port: parser.port ? parseInt(parser.port, 10) : undefined,
+      hostname,
+      port,
       protocol,
       ignoreSRV,
-      signal: AbortSignal.any([req.signal, AbortSignal.timeout(timeout)]),
+      signal: AbortSignal.any([signal, AbortSignal.timeout(timeout)]),
     });
     return new Response(json, {
-      headers: [
-        ["content-type", "application/json"],
-      ],
+      headers: {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+      },
     });
   } catch (e) {
     if (e instanceof DOMException && e.name === "TimeoutError") {
@@ -81,27 +123,25 @@ const handler = async (req: Request) => {
 };
 export default {
   async fetch(req) {
-    if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+    if (!["GET", "HEAD"].includes(req.method)) {
       return new Response(null, {
         status: 501,
-        headers: [
-          ["connection", "close"],
-        ],
+        headers: { "connection": "close" },
       });
     }
-    if (req.method === "OPTIONS") {
+    if (req.headers.get("sec-fetch-dest") === "image") {
       return new Response(null, {
-        headers: [
-          ["access-control-allow-origin", "*"],
-          ["access-control-allow-methods", "*"],
-          ["access-control-allow-headers", "*"],
-          ["access-control-max-age", "86400"],
-        ],
+        status: 404,
+        headers: { "vary": "sec-fetch-dest" },
       });
     }
-    const res = await handler(req);
-    res.headers.append("allow", "GET, HEAD, OPTIONS");
+    const url = new URL(req.url);
+    if (url.pathname === "/") {
+      return new Response(`Usage: ${url.origin}/:address`);
+    }
+    const res = await handler(req.signal, url.pathname, url.searchParams);
     res.headers.append("access-control-allow-origin", "*");
+    res.headers.append("allow", "GET, HEAD");
     return res;
   },
 } satisfies Deno.ServeDefaultExport;
