@@ -9,7 +9,23 @@ const bracketedHostRE = /^\[([^:\]]*:[^\]]*)](?::(\d*))?$/;
 function parseAddr(input: string): {
   hostname: string;
   port: number | undefined;
+  properties: Record<string, string>;
 } | null {
+  // deno-lint-ignore ban-types
+  const properties: Record<string, string> = { __proto__: null } as {};
+  const queryStart = input.lastIndexOf("?");
+  if (queryStart !== -1) {
+    const props = new URLSearchParams(input.substring(queryStart));
+    for (const [name, value] of props) {
+      properties[name] = value;
+    }
+    input = input.substring(0, queryStart);
+  }
+  const userEnd = input.indexOf("@");
+  if (userEnd !== -1) {
+    properties._id = input.substring(0, userEnd);
+    input = input.substring(userEnd + 1);
+  }
   let hostname: string;
   let portString: string | undefined;
   if (input.startsWith("[")) {
@@ -36,7 +52,7 @@ function parseAddr(input: string): {
       return null;
     }
   }
-  return { hostname, port };
+  return { hostname, port, properties };
 }
 
 const defaultTimeout = 10000;
@@ -56,7 +72,7 @@ const handler = async (
   if (!parse) {
     return new Response("Invalid address", { status: 400 });
   }
-  const { hostname, port } = parse;
+  const { hostname, port, properties } = parse;
   if (!hostname) {
     return new Response("Empty hostname", { status: 400 });
   }
@@ -105,6 +121,7 @@ const handler = async (
       hostname,
       port,
       protocol,
+      properties,
       ignoreSRV,
       signal: AbortSignal.any([signal, AbortSignal.timeout(timeout)]),
     });

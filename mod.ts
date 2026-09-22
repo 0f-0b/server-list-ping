@@ -93,6 +93,8 @@ export interface ServerListPingOptions {
    * vanilla server does not use this information. Defaults to `-1`.
    */
   protocol?: number | undefined;
+  /** Additional parameters such as `_id`. */
+  properties?: Readonly<Record<string, string>>;
   /** If `true`, do not resolve SRV records. */
   ignoreSRV?: boolean | undefined;
   /** A signal to abort the query. */
@@ -114,22 +116,28 @@ export async function serverListPing(
     hostname,
     port = DEFAULT_PORT,
     protocol = -1,
+    properties,
     ignoreSRV,
     signal,
   } = options;
-  if (!ignoreSRV && port === DEFAULT_PORT) {
-    try {
-      const [record] = await Deno.resolveDns(
-        `_minecraft._tcp.${hostname}`,
-        "SRV",
-        { signal },
-      );
-      if (record) {
-        hostname = record.target;
-        port = record.port;
+  const props = new URLSearchParams(properties);
+  if (!ignoreSRV) {
+    props.delete("_o");
+    if (port === DEFAULT_PORT) {
+      try {
+        const [record] = await Deno.resolveDns(
+          `_minecraft._tcp.${hostname}`,
+          "SRV",
+          { signal },
+        );
+        if (record) {
+          props.append("_o", `${hostname}:${port}`);
+          hostname = record.target;
+          port = record.port;
+        }
+      } catch {
+        // ignored
       }
-    } catch {
-      // ignored
     }
   }
   using conn = await Deno.connect({ hostname, port, signal });
@@ -141,7 +149,7 @@ export async function serverListPing(
     await writePacket(w, (p) => {
       writeVarUint32LESync(p, 0);
       writeVarUint32LESync(p, protocol);
-      writeStringSync(p, hostname);
+      writeStringSync(p, props.size === 0 ? hostname : `${hostname}?${props}`);
       writeInt16BESync(p, port);
       writeVarUint32LESync(p, 1);
     });
