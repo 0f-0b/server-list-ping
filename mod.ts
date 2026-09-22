@@ -94,7 +94,7 @@ export interface ServerListPingOptions {
    */
   protocol?: number | undefined;
   /** Additional parameters such as `_id`. */
-  properties?: Readonly<Record<string, string>>;
+  properties?: Readonly<Record<string, string>> | undefined;
   /** If `true`, do not resolve SRV records. */
   ignoreSRV?: boolean | undefined;
   /** A signal to abort the query. */
