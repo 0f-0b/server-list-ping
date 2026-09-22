@@ -5,19 +5,10 @@
     "@ud2/binio": "jsr:@ud2/binio@^0.3.0"
   },
   "compilerOptions": {
-    "lib": [
-      "deno.ns",
-      "deno.shared_globals"
-    ],
-    "exactOptionalPropertyTypes": true
+    "lib": ["deno.ns", "deno.shared_globals"]
   },
   "publish": {
-    "exclude": [
-      ".github",
-      "deno.lock",
-      "**/test.ts",
-      "**/*_test.ts"
-    ]
+    "exclude": [".github", "deno.lock", "**/test.ts", "**/*_test.ts"]
   },
   "tasks": {
     "cache": "deno cache --allow-import=jsr.io:443 main.ts",

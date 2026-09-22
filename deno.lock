@@ -1,9 +1,20 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@david/publish-on-tag@0.2.0": "0.2.0",
+    "jsr:@std/semver@1": "1.0.8",
     "jsr:@ud2/binio@0.3": "0.3.0"
   },
   "jsr": {
+    "@david/publish-on-tag@0.2.0": {
+      "integrity": "6a4abcc352141e46e705041ca73836176d64cebc1080b6d915de630df9853dea",
+      "dependencies": [
+        "jsr:@std/semver"
+      ]
+    },
+    "@std/semver@1.0.8": {
+      "integrity": "dc830e8b8b6a380c895d53fbfd1258dc253704ca57bbe1629ac65fd7830179b7"
+    },
     "@ud2/binio@0.3.0": {
       "integrity": "daf5425c46198b97eae0cb8b569fd3c8a90a1b0b8c32951d70af7233327a5a1f"
     }

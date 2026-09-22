@@ -16,7 +16,7 @@ import {
 import { deadline } from "./deadline.ts";
 
 const encoder = new TextEncoder();
-const decoder = new TextDecoder(undefined, { ignoreBOM: true });
+const lossyDecoder = new TextDecoder(undefined, { ignoreBOM: true });
 
 async function readVarUint21LE(
   r: ReadableStreamBYOBReader,
@@ -51,7 +51,7 @@ function readStringSync(r: Uint8ArrayReader): string | null {
     return "";
   }
   const bytes = readFullSync(r, new Uint8Array(len)) ?? unexpectedEof();
-  return decoder.decode(bytes);
+  return lossyDecoder.decode(bytes);
 }
 
 async function readPacket(
@@ -122,7 +122,6 @@ export async function serverListPing(
       const [record] = await Deno.resolveDns(
         `_minecraft._tcp.${hostname}`,
         "SRV",
-        // @ts-expect-error Deno typings are not compatible with `exactOptionalPropertyTypes` yet
         { signal },
       );
       if (record) {
@@ -133,7 +132,6 @@ export async function serverListPing(
       // ignored
     }
   }
-  // @ts-expect-error Deno typings are not compatible with `exactOptionalPropertyTypes` yet
   using conn = await Deno.connect({ hostname, port, signal });
   const bufferedReadable = new BufferedReadableStream(conn.readable);
   const bufferedWritable = new BufferedWritableStream(conn.writable);
